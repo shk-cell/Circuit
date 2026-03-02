@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CircuitLab — 학습 모드 선택</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --accent: #0284c7;
+      --accent2: #10b981;
+      --text: #111827;
+      --muted: #6b7280;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      max-width: 900px;
+      width: 90%;
+    }
+    .logo {
+      font-family: 'Space Mono', monospace;
+      color: var(--accent);
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+    }
+    .logo span { color: var(--accent2); }
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 50px;
+      font-size: 18px;
+    }
+    .modes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .mode-card {
+      background: var(--panel);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 40px 30px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    .mode-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+      border-color: var(--accent);
+    }
+    .icon {
+      font-size: 50px;
+      margin-bottom: 20px;
+    }
+    .mode-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    .mode-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    /* 미구현 모드 스타일 */
+    .mode-pending .btn { background: #f1f5f9; color: var(--muted); }
+    /* 구현된 모드 스타일 */
+    .mode-active .btn { background: var(--accent); color: white; }
+    
+    .badge {
+      font-size: 10px;
+      background: #fee2e2;
+      color: #ef4444;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .modes { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">⚡Circuit<span>Lab</span></div>
+    <p class="subtitle">아두이노 회로 학습 플랫폼에 오신 것을 환영합니다.</p>
+    
+    <div class="modes">
+      <!-- 왼쪽: 회로 보고 코드 작성 (구현됨) -->
+      <a href="/circuit-to-code.html" class="mode-card mode-active">
+        <div class="icon">💻</div>
+        <div class="mode-title">회로 보고 코드 작성</div>
+        <div class="mode-desc">
+          완성된 회로를 보고 기능을 구현하기 위한<br>
+          Arduino 코드를 작성하고 채점받습니다.
+        </div>
+        <div class="btn">시작하기 →</div>
+      </a>
+
+      <!-- 오른쪽: 코드 보고 회로 작성. (구현됨) -->
+      <a href="/code-to-circuit.html" class="mode-card mode-active">
+        <div class="icon">🔌</div>
+        <div class="mode-title">회로 보고 코드 작성</div>
+        <div class="mode-desc">
+          제시된 Arduino 코드를 분석하여<br>
+          그에 맞는 회로를 직접 설계하고 채점받습니다.
+        </div>
+        <div class="btn">시작하기 →</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,14 +1,14 @@
 const problems = [
   {
     id: 1,
-    title: "LED 켜기",
-    description: "오른쪽 회로도를 참고하여 LED를 켜는 코드를 작성하세요.",
-    defaultCode: `void setup() {\n  // 힌트1: pinMode(핀번호, 모드); 함수를 사용합니다.\n  // 디지털 13번 핀을 출력(OUTPUT) 모드로 설정하세요.\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  // 힌트2: digitalWrite(핀번호, 상태); 함수를 사용합니다.\n  // 13번 핀에 HIGH 신호를 보내서 LED를 켜보세요!\n  \n}`,
+    title: "LED 켜기 (5V)",
+    description: "Arduino의 5V와 GND를 사용하여 LED를 켜보세요. 220Ω 저항을 반드시 사용해야 합니다.",
+    defaultCode: `void setup() {\n  // 이 문제는 코드가 필요하지 않습니다.\n}\n\nvoid loop() {\n  \n}`,
     modelWires: [
-      ['D13', 'e14'],
+      ['5V', 'e14'],
       ['a9', 'GND0']
     ],
-    keyKeywords: ["pinMode", "OUTPUT", "digitalWrite", "HIGH"],
+    keyKeywords: [],
     components: [
       { type: 'resistor', label: '220Ω', pin1: 'e10', pin2: 'e14' },
       { type: 'led',      label: 'LED',  pin1: 'a10', pin2: 'a9'  },

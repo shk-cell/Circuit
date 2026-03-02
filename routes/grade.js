@@ -211,6 +211,75 @@ router.post('/:id', async (req, res) => {
     // ================================================================
     let preCheck = '';
 
+    // ── 문제 1: LED 켜기 (5V) ───────────────────────────────────────────
+    if (problemId === 1) {
+      const led  = components.find(c => c.type === 'led');
+      const r220 = components.find(c => c.label === '220Ω' || c.type === 'resistor');
+
+      const ledPins  = led   ? [led.pin1,  led.pin2]  : [];
+      const r220Pins = r220  ? [r220.pin1, r220.pin2] : [];
+
+      // 체크1: LED의 한 쪽이 GND에 연결되어 있어야 함
+      const chk1 = anyPin(adj, ledPins, r => [...r].some(isGND));
+      
+      // 체크2: 220Ω 저항의 한 쪽은 5V(Power)에 연결되어야 함
+      const chk2 = anyPin(adj, r220Pins, r => [...r].some(isPower));
+      
+      // 체크3: LED와 저항이 서로 연결되어 있는지 확인 (BFS)
+      const chk3 = ledPins.some(lp => {
+        const r = reachableAll(adj, lp);
+        return r220Pins.some(rp => r.has(rp));
+      });
+
+      preCheck = `
+[서버 사전 체크 결과 - 이 결과를 최우선으로 사용하세요]
+체크1 (LED → GND):           ${chk1 ? '✅ 통과' : '❌ 실패 - LED가 GND(접지)에 연결되지 않음'}
+체크2 (220Ω → 5V):           ${chk2 ? '✅ 통과' : '❌ 실패 - 220Ω 저항이 5V에 연결되지 않음'}
+체크3 (LED ↔ 저항 연결):     ${chk3 ? '✅ 통과' : '❌ 실패 - LED와 저항이 서로 연결되지 않음 (같은 행에 꽂았는지 확인!)'}
+최종: ${chk1&&chk2&&chk3 ? '✅ 정답' : '❌ 오답'}
+`;
+    }
+
+    // ── 문제 2: LED 3개 켜기 ──────────────────────────────────────────
+    if (problemId === 2) {
+      const leds = components.filter(c => c.type === 'led');
+      const resistors = components.filter(c => c.label === '220Ω' || c.type === 'resistor');
+
+      let allPassed = true;
+      let checkResults = [];
+
+      for (let i = 0; i < 3; i++) {
+        const led = leds[i];
+        const ledPins = led ? [led.pin1, led.pin2] : [];
+        
+        // 1. 각 LED가 GND에 연결되어 있는지 확인
+        const connectsToGND = anyPin(adj, ledPins, r => [...r].some(isGND));
+        
+        // 2. 각 LED가 어떤 저항과 연결되어 있는지 확인
+        const connectedResistor = resistors.find(res => {
+          const resPins = [res.pin1, res.pin2];
+          return ledPins.some(lp => {
+            const reachable = reachableAll(adj, lp);
+            return resPins.some(rp => reachable.has(rp));
+          });
+        });
+
+        // 3. 그 저항이 5V(Power)에 연결되어 있는지 확인
+        const resistorToPower = connectedResistor ? anyPin(adj, [connectedResistor.pin1, connectedResistor.pin2], r => [...r].some(isPower)) : false;
+
+        const ledOk = connectsToGND && resistorToPower;
+        if (!ledOk) allPassed = false;
+        
+        checkResults.push(`LED${i+1}: ${ledOk ? '✅' : '❌'} (GND:${connectsToGND ? 'OK' : 'FAIL'}, Power:${resistorToPower ? 'OK' : 'FAIL'})`);
+      }
+
+      preCheck = `
+[서버 사전 체크 결과 - 이 결과를 최우선으로 사용하세요]
+${checkResults.join('\n')}
+최종: ${allPassed ? '✅ 정답' : '❌ 오답 (모든 LED가 독립적인 저항을 거쳐 5V와 GND에 연결되어야 합니다)'}
+`;
+    }
+
     // ── 문제 3: 푸시버튼으로 LED 켜기 ──────────────────────────────
     if (problemId === 3) {
       const btn  = components.find(c => c.type === 'button');

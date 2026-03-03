@@ -1,7 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const { OpenAI } = require('openai');
-const problems = require('../data/problems');
+const problems = require('../data/problems-write-code');
 
 require('dotenv').config();
 

@@ -1,6 +1,6 @@
 export const api = {
-  async fetchProblems() {
-    const res = await fetch('/api/problems');
+  async fetchProblems(type = 'build-circuit') {
+    const res = await fetch(`/api/problems?type=${type}`);
     const json = await res.json();
     if (!json.success) throw new Error('문제 로드 실패');
     return json.data;

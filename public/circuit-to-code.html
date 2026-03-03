@@ -160,13 +160,53 @@
     .canvas-wrap{flex:1;overflow:hidden;position:relative;background:var(--bg);cursor:default;}
     canvas{display:block;position:absolute;top:0;left:0;}
 
-    /* 모달 및 알림 스타일 생략 (기존 index.html과 동일하게 유지) */
-    .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(2px);}
+    /* 모달 및 알림 스타일 */
+    .modal-ov{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.4);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      backdrop-filter:blur(2px);
+    }
     .modal-ov.show{display:flex;}
-    .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:380px;width:90%;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.1);}
+    .modal{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:28px;
+      max-width:380px;
+      width:90%;
+      text-align:center;
+      animation:su .3s ease;
+      box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    }
+    @keyframes su{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .modal-icon{font-size:44px;margin-bottom:12px;}
+    .modal h2{font-size:20px;margin-bottom:6px;}
     .modal-score{font-size:38px;font-family:'Space Mono',monospace;margin:12px 0;}
-    .mbtn{padding:9px 22px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;background:var(--panel2);border:1px solid var(--border);}
-    .notif{position:fixed;top:60px;right:18px;background:var(--panel);border:1px solid var(--accent2);border-radius:8px;padding:10px 14px;font-size:12px;display:none;z-index:50;font-family:'Space Mono',monospace;}
+    .modal p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:20px;}
+    .modal-acts{display:flex;gap:10px;justify-content:center;}
+    .mbtn{padding:9px 22px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;}
+    .mbtn-s{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+    
+    .notif{
+      position:fixed;
+      top:60px;
+      right:18px;
+      background:var(--panel);
+      border:1px solid var(--accent2);
+      border-radius:8px;
+      padding:10px 14px;
+      font-size:12px;
+      display:none;
+      z-index:50;
+      font-family:'Space Mono',monospace;
+      color:#059669;
+      box-shadow:0 4px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
   </style>
 </head>
 <body>
@@ -232,7 +272,7 @@ void loop() {
       <div class="modal-score" id="mScore">통과</div>
       <p id="mMsg"></p>
       <div class="modal-acts">
-        <button class="mbtn" id="modalClose">닫기</button>
+        <button class="mbtn mbtn-s" id="modalClose">닫기</button>
       </div>
     </div>
   </div>

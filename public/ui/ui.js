@@ -124,8 +124,11 @@ export const ui = (() => {
 
   async function loadProblems() {
     let list;
+    const isWriteCode = window.location.pathname.includes('circuit-to-code');
+    const type = isWriteCode ? 'write-code' : 'build-circuit';
+    
     try {
-      list = await api.fetchProblems();
+      list = await api.fetchProblems(type);
     } catch (e) {
       console.error('[fetchProblems failed]', e);
       showServerErrorUI();

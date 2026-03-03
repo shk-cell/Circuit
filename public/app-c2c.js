@@ -15,6 +15,11 @@ if (window.CodeMirror) {
     tabSize: 2,
     lineWrapping: true
   });
+
+  // 처음 클릭하거나 포커스될 때 레이아웃 재계산 강제 (커서 위치 오류 방지)
+  editor.on('focus', function() {
+    editor.refresh();
+  });
 }
 
 async function init() {
@@ -28,7 +33,7 @@ async function init() {
 
   // 1번 문제 로드 (회로 보고 코드 작성 모드 전용)
   try {
-    const problems = await api.fetchProblems();
+    const problems = await api.fetchProblems('write-code');
     const prob1 = problems.find(p => p.id === 1);
     
     if (prob1) {
@@ -39,6 +44,11 @@ async function init() {
       // 코드 에디터 초기화 (CodeMirror 사용)
       if (editor) {
         editor.setValue(prob1.defaultCode || '');
+        // 값 설정 후 즉시 및 지연 후 refresh
+        editor.refresh();
+        setTimeout(() => {
+          editor.refresh();
+        }, 1);
       } else {
         $('codeEditor').value = prob1.defaultCode || '';
       }
@@ -56,7 +66,11 @@ async function init() {
       // 2. 엔진에 부품 및 모범 회로 전선 주입
       engine.state.components = prob1.components.map(c => ({ ...c }));
       if (prob1.modelWires) {
-        engine.state.wires = prob1.modelWires.map(w => ({ from: w[0], to: w[1], color: '#ff4444' }));
+        engine.state.wires = prob1.modelWires.map(w => ({ 
+          from: w[0], 
+          to: w[1], 
+          color: w[2] || '#ff4444' 
+        }));
       }
       
       // 3. 렌더링 갱신
@@ -71,10 +85,7 @@ async function init() {
             $('codeEditor').value = prob1.defaultCode;
           }
           
-          const notif = $('notif');
-          notif.textContent = '🔄 코드가 초기화되었습니다.';
-          notif.style.display = 'block';
-          setTimeout(() => notif.style.display = 'none', 2000);
+          showNotif('🔄 코드가 초기화되었습니다.');
         }
       };
     }
@@ -82,7 +93,49 @@ async function init() {
     console.error('문제 로드 실패:', e);
   }
 
-  // ... (중간 생략: 줌 및 팬 로직)
+  // ── 줌 및 팬 로직 ──
+  const wrap = $('canvasWrap');
+  
+  // 마우스 휠 줌 (CTC와 동일)
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const r = wrap.getBoundingClientRect();
+    engine.zoomBy(
+      e.deltaY < 0 ? 0.12 : -0.12,
+      r.width, r.height,
+      e.clientX - r.left, e.clientY - r.top
+    );
+  }, { passive: false });
+
+  // 툴바 버튼
+  $('zoomMinus')?.addEventListener('click', () => engine.zoomBy(-0.15, wrap.clientWidth, wrap.clientHeight, wrap.clientWidth / 2, wrap.clientHeight / 2));
+  $('zoomPlus') ?.addEventListener('click', () => engine.zoomBy( 0.15, wrap.clientWidth, wrap.clientHeight, wrap.clientWidth / 2, wrap.clientHeight / 2));
+
+  // 단순 팬(Pan) 로직
+  let isPanning = false;
+  let startX, startY, startOffX, startOffY;
+
+  wrap.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    isPanning = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startOffX = engine.state.offsetX;
+    startOffY = engine.state.offsetY;
+    wrap.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    engine.state.offsetX = startOffX + (e.clientX - startX);
+    engine.state.offsetY = startOffY + (e.clientY - startY);
+    engine.clampOffset(wrap.clientWidth, wrap.clientHeight);
+  });
+
+  window.addEventListener('mouseup', () => {
+    isPanning = false;
+    wrap.style.cursor = 'default';
+  });
 
   // 채점 버튼 이벤트
   $('submitBtn').onclick = async () => {
@@ -94,8 +147,7 @@ async function init() {
     const compPositions = engine.state.components;
 
     try {
-      $('notif').textContent = '🤖 GPT 선생님이 코드를 검토 중입니다...';
-      $('notif').style.display = 'block';
+      showNotif('🤖 GPT 선생님이 코드를 검토 중입니다...');
       
       const result = await api.gradeCode(probId, { 
         wires: formattedWires, 
@@ -103,24 +155,51 @@ async function init() {
         components: compPositions 
       });
 
-      $('notif').style.display = 'none';
-      
-      // 결과 표시
-      $('mIcon').textContent = result.passed ? '🎉' : '🤔';
-      $('mTitle').textContent = result.passed ? '정답입니다!' : '아쉽네요!';
-      $('mScore').textContent = result.passed ? '통과' : '오답';
-      $('mScore').style.color = result.passed ? 'var(--accent2)' : 'var(--warn)';
-      $('mMsg').textContent = result.feedback[0];
-      $('modal').classList.add('show');
+      // 결과 표시 (CTC와 동일한 텍스트 및 스타일)
+      if (result.passed) {
+        showModal('🎉', '정답입니다!', '통과', 'var(--accent2)', result.feedback[0] || '훌륭하게 코드를 작성했습니다!');
+      } else {
+        showModal('🤔', '아쉽네요!', '오답', 'var(--warn)', result.feedback[0] || '코드를 다시 한번 확인해 보세요.');
+      }
     } catch (error) {
       console.error('채점 오류:', error);
-      $('notif').textContent = '⚠️ 채점 서버 통신 실패';
+      showNotif('⚠️ 채점 서버 통신 실패', true);
     }
   };
 
   $('modalClose').onclick = () => $('modal').classList.remove('show');
 
   renderer.startLoop();
+}
+
+// UI 헬퍼 함수 추가 (CTC ui.js와 동일한 기능)
+function showNotif(msg, isError = false) {
+  const el = $('notif');
+  if (!el) return;
+  el.textContent = msg;
+  if (isError) {
+    el.style.borderColor = 'var(--warn)';
+    el.style.color = 'var(--warn)';
+    el.style.background = 'rgba(234,88,12,.1)';
+  } else {
+    el.style.borderColor = 'var(--accent2)';
+    el.style.color = '#059669';
+    el.style.background = 'var(--panel)';
+  }
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => (el.style.display = 'none'), isError ? 4000 : 2000);
+}
+
+function showModal(icon, title, scoreText, scoreColor, msg) {
+  const modal = $('modal');
+  if (!modal) return;
+  $('mIcon').textContent  = icon;
+  $('mTitle').textContent = title;
+  $('mScore').textContent = scoreText;
+  $('mScore').style.color = scoreColor;
+  $('mMsg').textContent   = msg;
+  modal.classList.add('show');
 }
 
 init();

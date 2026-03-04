@@ -31,64 +31,90 @@ async function init() {
     engine,
   });
 
-  // 1번 문제 로드 (회로 보고 코드 작성 모드 전용)
-  try {
-    const problems = await api.fetchProblems('write-code');
-    const prob1 = problems.find(p => p.id === 1);
-    
-    if (prob1) {
-      // 1. 문제 정보 표시
-      $('probTitle').textContent = `1. ${prob1.title}`;
-      $('probDesc').innerHTML = prob1.description;
-      
-      // 코드 에디터 초기화 (CodeMirror 사용)
-      if (editor) {
-        editor.setValue(prob1.defaultCode || '');
-        // 값 설정 후 즉시 및 지연 후 refresh
-        editor.refresh();
-        setTimeout(() => {
-          editor.refresh();
-        }, 1);
-      } else {
-        $('codeEditor').value = prob1.defaultCode || '';
-      }
-      
-      // 키워드 표시
-      if (prob1.keyKeywords && prob1.keyKeywords.length > 0) {
-        $('keywordsArea').style.display = 'block';
-        $('probKeywords').innerHTML = prob1.keyKeywords
-          .map(k => `<span class="keyword-tag">${k}</span>`)
-          .join('');
-      } else {
-        $('keywordsArea').style.display = 'none';
-      }
-      
-      // 2. 엔진에 부품 및 모범 회로 전선 주입
-      engine.state.components = prob1.components.map(c => ({ ...c }));
-      if (prob1.modelWires) {
-        engine.state.wires = prob1.modelWires.map(w => ({ 
-          from: w[0], 
-          to: w[1], 
-          color: w[2] || '#ff4444' 
-        }));
-      }
-      
-      // 3. 렌더링 갱신
-      renderer.drawAll();
+  let currentProblem = null;
+  let allProblems = [];
 
-      // 3. 코드 초기화 버튼 기능 (내부에서 prob1 사용)
-      $('resetBtn').onclick = () => {
-        if (confirm('작성한 코드를 초기화하고 처음 상태로 되돌리시겠습니까?')) {
-          if (editor) {
-            editor.setValue(prob1.defaultCode);
-          } else {
-            $('codeEditor').value = prob1.defaultCode;
-          }
-          
-          showNotif('🔄 코드가 초기화되었습니다.');
-        }
-      };
+  function loadProblem(prob) {
+    if (!prob) return;
+    currentProblem = prob;
+
+    // 1. 문제 정보 표시
+    $('probTitle').textContent = `${prob.id}. ${prob.title}`;
+    $('probDesc').innerHTML = prob.description;
+    
+    // 코드 에디터 초기화 (CodeMirror 사용)
+    if (editor) {
+      editor.setValue(prob.defaultCode || '');
+      editor.refresh();
+      setTimeout(() => { editor.refresh(); }, 1);
+    } else {
+      $('codeEditor').value = prob.defaultCode || '';
     }
+    
+    // 키워드 표시
+    if (prob.keyKeywords && prob.keyKeywords.length > 0) {
+      $('keywordsArea').style.display = 'block';
+      $('probKeywords').innerHTML = prob.keyKeywords
+        .map(k => `<span class="keyword-tag">${k}</span>`)
+        .join('');
+    } else {
+      $('keywordsArea').style.display = 'none';
+    }
+    
+    // 2. 엔진에 부품 및 모범 회로 전선 주입
+    engine.state.components = prob.components.map(c => ({ ...c }));
+    if (prob.modelWires) {
+      engine.state.wires = prob.modelWires.map(w => ({ 
+        from: w[0], 
+        to: w[1], 
+        color: w[2] || '#ff4444' 
+      }));
+    } else {
+      engine.state.wires = [];
+    }
+    
+    // 3. 렌더링 갱신 및 줌 초기화
+    renderer.drawAll();
+    engine.resetZoom(wrap.clientWidth, wrap.clientHeight);
+
+    // 3. 코드 초기화 버튼 기능
+    $('resetBtn').onclick = () => {
+      if (confirm('작성한 코드를 초기화하고 처음 상태로 되돌리시겠습니까?')) {
+        if (editor) {
+          editor.setValue(prob.defaultCode);
+        } else {
+          $('codeEditor').value = prob.defaultCode;
+        }
+        showNotif('🔄 코드가 초기화되었습니다.');
+      }
+    };
+  }
+
+  // 문제 로드
+  try {
+    const rawProblems = await api.fetchProblems('write-code');
+    // 1번과 2번 문제만 필터링 (사용자가 '만든 것'으로 간주하는 범위)
+    allProblems = rawProblems.filter(p => p.id === 1 || p.id === 2);
+    
+    const sel = $('probSelect');
+    sel.innerHTML = '';
+    
+    allProblems.forEach((p, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${p.id}. ${p.title}`;
+      if (p.id === 2) opt.selected = true; // 기본값 2번
+      sel.appendChild(opt);
+    });
+
+    sel.onchange = (e) => {
+      loadProblem(allProblems[e.target.value]);
+    };
+
+    // 초기 문제(2번) 로드
+    const initialProb = allProblems.find(p => p.id === 2) || allProblems[0];
+    loadProblem(initialProb);
+
   } catch (e) {
     console.error('문제 로드 실패:', e);
   }
@@ -96,7 +122,7 @@ async function init() {
   // ── 줌 및 팬 로직 ──
   const wrap = $('canvasWrap');
   
-  // 마우스 휠 줌 (CTC와 동일)
+  // 마우스 휠 줌
   wrap.addEventListener('wheel', (e) => {
     e.preventDefault();
     const r = wrap.getBoundingClientRect();
@@ -111,36 +137,48 @@ async function init() {
   $('zoomMinus')?.addEventListener('click', () => engine.zoomBy(-0.15, wrap.clientWidth, wrap.clientHeight, wrap.clientWidth / 2, wrap.clientHeight / 2));
   $('zoomPlus') ?.addEventListener('click', () => engine.zoomBy( 0.15, wrap.clientWidth, wrap.clientHeight, wrap.clientWidth / 2, wrap.clientHeight / 2));
 
-  // 단순 팬(Pan) 로직
+  // 견고한 팬(Pan) 로직 (ui.js 방식)
+  let mouseDownPos = null;
   let isPanning = false;
-  let startX, startY, startOffX, startOffY;
+  let panStartX, panStartY, panOffStartX, panOffStartY;
 
   wrap.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
-    isPanning = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startOffX = engine.state.offsetX;
-    startOffY = engine.state.offsetY;
-    wrap.style.cursor = 'grabbing';
+    mouseDownPos = { cx: e.clientX, cy: e.clientY };
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    panOffStartX = engine.state.offsetX;
+    panOffStartY = engine.state.offsetY;
+    isPanning = false;
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    engine.state.offsetX = startOffX + (e.clientX - startX);
-    engine.state.offsetY = startOffY + (e.clientY - startY);
-    engine.clampOffset(wrap.clientWidth, wrap.clientHeight);
+    if (mouseDownPos && e.buttons === 1) {
+      if (!isPanning && Math.hypot(e.clientX - mouseDownPos.cx, e.clientY - mouseDownPos.cy) > 6) {
+        isPanning = true;
+        wrap.style.cursor = 'grabbing';
+      }
+    }
+
+    if (isPanning) {
+      const r = wrap.getBoundingClientRect();
+      engine.state.offsetX = panOffStartX + (e.clientX - panStartX);
+      engine.state.offsetY = panOffStartY + (e.clientY - panStartY);
+      engine.clampOffset(r.width, r.height);
+    }
   });
 
   window.addEventListener('mouseup', () => {
     isPanning = false;
-    wrap.style.cursor = 'default';
+    mouseDownPos = null;
+    wrap.style.cursor = 'grab';
   });
 
   // 채점 버튼 이벤트
   $('submitBtn').onclick = async () => {
+    if (!currentProblem) return;
     const code = editor ? editor.getValue() : $('codeEditor').value;
-    const probId = 1;
+    const probId = currentProblem.id;
     
     // 이 모드에서는 회로가 고정되어 있으므로, 현재 엔진의 wires와 components를 그대로 전송
     const formattedWires = engine.state.wires.map(w => [w.from, w.to]);

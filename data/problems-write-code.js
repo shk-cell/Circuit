@@ -16,16 +16,25 @@ const problems = [
   },
   {
     id: 2,
-    title: "LED 3개 켜기",
-    description: "Arduino의 5V와 GND를 사용하여 LED 3개를 동시에 켜보세요.\n각 LED마다 220Ω 저항을 직렬로 연결하고, 3개의 회로를 각각 독립적으로 병렬 구성하세요.\n⚠️ 직렬 연결(LED끼리 이어 연결)은 오답입니다. 각 LED가 5V→저항→LED→GND 경로를 독립적으로 가져야 합니다.",
-    defaultCode: `void setup() {\n\n}\n\nvoid loop() {\n\n}`,
+    title: "LED 3개 순차 점멸",
+    description: "디지털 핀 2번, 4번, 6번에 연결된 3개의 LED를 1초 간격으로 순서대로 켜고 끄는 코드를 작성하세요.<br><br><b>동작 순서:</b><br>1. 2번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>2. 4번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>3. 6번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>4. 무한 반복",
+    defaultCode: `void setup() {\n  // [힌트] 각 핀(2, 4, 6)을 출력(OUTPUT) 모드로 설정하세요.\n  \n}\n\nvoid loop() {\n  // [힌트] 2번 핀을 켜고(HIGH) 1초 기다린(delay) 후 끄세요(LOW).\n  \n  // [힌트] 4번 핀도 동일하게 작성하세요.\n  \n  // [힌트] 6번 핀도 동일하게 작성하세요.\n  \n}`,
+    modelWires: [
+      ['D2', 'e10', '#ff4444'],   // D2 -> LED1 저항입력
+      ['a5', 'GND1', '#222222'],  // LED1 캐소드(-) -> GND
+      ['D4', 'e19', '#4488ff'],   // D4 -> LED2 저항입력
+      ['a14', 'GND1', '#222222'], // LED2 캐소드(-) -> GND
+      ['D6', 'e28', '#44dd88'],   // D6 -> LED3 저항입력
+      ['a23', 'GND1', '#222222']  // LED3 캐소드(-) -> GND
+    ],
+    keyKeywords: ["pinMode", "digitalWrite", "delay"],
     components: [
-      { type: 'resistor', label: '220Ω', pin1: 'e5',  pin2: 'e9'  },
-      { type: 'led',      label: 'LED1', pin1: 'a5',  pin2: 'a4'  },
-      { type: 'resistor', label: '220Ω', pin1: 'e14', pin2: 'e18' },
-      { type: 'led',      label: 'LED2', pin1: 'a14', pin2: 'a13' },
-      { type: 'resistor', label: '220Ω', pin1: 'e23', pin2: 'e27' },
-      { type: 'led',      label: 'LED3', pin1: 'a23', pin2: 'a22' },
+      { type: 'resistor', label: '220Ω', pin1: 'e6',  pin2: 'e10' },
+      { type: 'led',      label: 'LED1', pin1: 'a6',  pin2: 'a5'  }, // pin1(+)가 오른쪽(a6), pin2(-)가 왼쪽(a5)
+      { type: 'resistor', label: '220Ω', pin1: 'e15', pin2: 'e19' },
+      { type: 'led',      label: 'LED2', pin1: 'a15', pin2: 'a14' },
+      { type: 'resistor', label: '220Ω', pin1: 'e24', pin2: 'e28' },
+      { type: 'led',      label: 'LED3', pin1: 'a24', pin2: 'a23' },
     ],
   },
   {

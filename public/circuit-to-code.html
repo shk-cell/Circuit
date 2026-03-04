@@ -157,7 +157,8 @@
     }
     .toolbar span{font-size:12px; font-weight:700; color:var(--accent);}
 
-    .canvas-wrap{flex:1;overflow:hidden;position:relative;background:var(--bg);cursor:default;}
+    .canvas-wrap{flex:1;overflow:hidden;position:relative;background:var(--bg);cursor:grab;}
+    .canvas-wrap:active{cursor:grabbing;}
     canvas{display:block;position:absolute;top:0;left:0;}
 
     /* 모달 및 알림 스타일 */
@@ -217,6 +218,10 @@
     </a>
     <div style="width:1px; height:20px; background:var(--border); margin:0 4px;"></div>
     <div class="logo">⚡Circuit<span>Lab</span> — 회로 보고 코드 작성</div>
+    <div style="width:1px; height:22px; background:var(--border); margin:0 10px;"></div>
+
+    <select id="probSelect" style="background:var(--panel2); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:6px; font-size:13px; font-family:'Noto Sans KR',sans-serif; font-weight:700; cursor:pointer; outline:none; transition:all 0.2s; min-width:220px;">
+    </select>
     
     <div class="nav-r">
       <button class="reset-btn" id="resetBtn" style="background:none; border:1px solid var(--border); color:var(--muted); padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; transition:all 0.2s;">⟳ 코드 초기화</button>

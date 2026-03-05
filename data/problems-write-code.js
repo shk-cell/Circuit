@@ -20,17 +20,17 @@ const problems = [
     description: "디지털 핀 2번, 4번, 6번에 연결된 3개의 LED를 1초 간격으로 순서대로 켜고 끄는 코드를 작성하세요.<br><br><b>동작 순서:</b><br>1. 2번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>2. 4번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>3. 6번 핀 LED 켜짐 (1초 대기) -> 꺼짐<br>4. 무한 반복",
     defaultCode: `void setup() {\n  // [힌트] 각 핀(2, 4, 6)을 출력(OUTPUT) 모드로 설정하세요.\n  \n}\n\nvoid loop() {\n  // [힌트] 2번 핀을 켜고(HIGH) 1초 기다린(delay) 후 끄세요(LOW).\n  \n  // [힌트] 4번 핀도 동일하게 작성하세요.\n  \n  // [힌트] 6번 핀도 동일하게 작성하세요.\n  \n}`,
     modelWires: [
-      ['D2', 'e10', '#ff4444'],   // D2 -> LED1 저항입력
-      ['a5', 'GND1', '#222222'],  // LED1 캐소드(-) -> GND
-      ['D4', 'e19', '#4488ff'],   // D4 -> LED2 저항입력
-      ['a14', 'GND1', '#222222'], // LED2 캐소드(-) -> GND
-      ['D6', 'e28', '#44dd88'],   // D6 -> LED3 저항입력
-      ['a23', 'GND1', '#222222']  // LED3 캐소드(-) -> GND
+      ['D2', 'e10', '#ff4444'],
+      ['a5', 'GND1', '#222222'],
+      ['D4', 'e19', '#4488ff'],
+      ['a14', 'GND1', '#222222'],
+      ['D6', 'e28', '#44dd88'],
+      ['a23', 'GND1', '#222222']
     ],
     keyKeywords: ["pinMode", "digitalWrite", "delay"],
     components: [
       { type: 'resistor', label: '220Ω', pin1: 'e6',  pin2: 'e10' },
-      { type: 'led',      label: 'LED1', pin1: 'a6',  pin2: 'a5'  }, // pin1(+)가 오른쪽(a6), pin2(-)가 왼쪽(a5)
+      { type: 'led',      label: 'LED1', pin1: 'a6',  pin2: 'a5'  },
       { type: 'resistor', label: '220Ω', pin1: 'e15', pin2: 'e19' },
       { type: 'led',      label: 'LED2', pin1: 'a15', pin2: 'a14' },
       { type: 'resistor', label: '220Ω', pin1: 'e24', pin2: 'e28' },
@@ -40,8 +40,16 @@ const problems = [
   {
     id: 3,
     title: "푸시버튼으로 LED 켜기",
-    description: "푸시버튼을 누르면 LED가 켜지고, 떼면 꺼지는 회로를 만드세요.\n\n[정답 판단 방법]\n체크1: BTN이 5V와 D2에 모두 연결되어 있는가?\n체크2: 10kΩ이 D2와 GND에 모두 연결되어 있는가?\n체크3: 220Ω이 D13에 연결되어 있는가?\n체크4: LED 음극이 GND에 연결되어 있는가?\n체크1~4가 모두 YES면 isCorrect: true",
-    defaultCode: `const int btnPin = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(btnPin, INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int state = digitalRead(btnPin);\n  digitalWrite(ledPin, state);\n}`,
+    description: "푸시버튼을 누르면 LED가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.",
+    defaultCode: `// [힌트]\n// 1. pinMode를 사용하여 버튼 핀은 INPUT, LED 핀은 OUTPUT으로 설정하세요.\n// 2. digitalRead로 버튼의 상태(HIGH/LOW)를 읽으세요.\n// 3. digitalWrite로 버튼 상태에 따라 LED를 제어하세요.\n\nvoid setup() {\n  \n}\n\nvoid loop() {\n  \n}`,
+    modelWires: [
+      ['5V', 'e10', '#ff4444'],
+      ['e12', 'D2', '#4488ff'],
+      ['a16', 'GND0', '#222222'],
+      ['D13', 'e21', '#ff4444'],
+      ['a20', 'GND1', '#222222']
+    ],
+    keyKeywords: ["pinMode", "digitalRead", "digitalWrite"],
     components: [
       { type: 'button',   label: 'BTN',  pin1: 'e10', pin2: 'e12', pin3: 'f10', pin4: 'f12' },
       { type: 'resistor', label: '10kΩ', pin1: 'a12', pin2: 'a16' },

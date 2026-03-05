@@ -5,8 +5,8 @@ const problems = [
     description: "Arduino의 5V와 GND를 사용하여 LED를 켜보세요. 220Ω 저항을 반드시 사용해야 합니다.",
     defaultCode: `void setup() {\n  // 이 문제는 코드가 필요하지 않습니다.\n}\n\nvoid loop() {\n  \n}`,
     modelWires: [
-      ['5V', 'e14'],
-      ['a9', 'GND0']
+      ['5V', 'e14', '#ff4444'],
+      ['a9', 'GND0', '#222222']
     ],
     keyKeywords: [],
     components: [
@@ -31,12 +31,19 @@ const problems = [
   {
     id: 3,
     title: "푸시버튼으로 LED 켜기",
-    description: "푸시버튼을 누르면 LED가 켜지고, 떼면 꺼지는 회로를 만드세요.\n\n[정답 판단 방법]\n체크1: BTN이 5V와 D2에 모두 연결되어 있는가?\n체크2: 10kΩ이 D2와 GND에 모두 연결되어 있는가?\n체크3: 220Ω이 D13에 연결되어 있는가?\n체크4: LED 음극이 GND에 연결되어 있는가?\n체크1~4가 모두 YES면 isCorrect: true",
-    defaultCode: `const int btnPin = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(btnPin, INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int state = digitalRead(btnPin);\n  digitalWrite(ledPin, state);\n}`,
+    description: "푸시버튼을 누르면 LED가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.",
+    defaultCode: `// [힌트]\n// 1. pinMode를 사용하여 버튼 핀은 INPUT, LED 핀은 OUTPUT으로 설정하세요.\n// 2. digitalRead로 버튼의 상태(HIGH/LOW)를 읽으세요.\n// 3. digitalWrite로 버튼 상태에 따라 LED를 제어하세요.\n\nvoid setup() {\n  \n}\n\nvoid loop() {\n  \n}`,
+    modelWires: [
+      ['5V', 'e10', '#ff4444'],    // 버튼 전원
+      ['e12', 'D2', '#4488ff'],    // 버튼 신호 -> D2
+      ['a16', 'GND0', '#222222'],  // 10k 저항 끝단 -> GND
+      ['D13', 'e21', '#ff4444'],   // D13 -> 220 저항 시작
+      ['a20', 'GND1', '#222222']   // LED 음극 -> GND
+    ],
     components: [
       { type: 'button',   label: 'BTN',  pin1: 'e10', pin2: 'e12', pin3: 'f10', pin4: 'f12' },
-      { type: 'resistor', label: '10kΩ', pin1: 'a12', pin2: 'a16' },
-      { type: 'resistor', label: '220Ω', pin1: 'e21', pin2: 'e25' },
+      { type: 'resistor', label: '10kΩ', pin1: 'a12', pin2: 'a16' }, // 가로 연결
+      { type: 'resistor', label: '220Ω', pin1: 'e21', pin2: 'e25' }, // 가로 연결
       { type: 'led',      label: 'LED',  pin1: 'a21', pin2: 'a20' },
     ],
   },

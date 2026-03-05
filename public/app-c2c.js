@@ -93,8 +93,8 @@ async function init() {
   // 문제 로드
   try {
     const rawProblems = await api.fetchProblems('write-code');
-    // 1번과 2번 문제만 필터링 (사용자가 '만든 것'으로 간주하는 범위)
-    allProblems = rawProblems.filter(p => p.id === 1 || p.id === 2);
+    // 모든 문제를 목록에 포함
+    allProblems = rawProblems;
     
     const sel = $('probSelect');
     sel.innerHTML = '';

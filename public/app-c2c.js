@@ -23,11 +23,12 @@ if (window.CodeMirror) {
 }
 
 async function init() {
+  const wrap = $('canvasWrap'); // 변수 선언을 위로 이동
   engine.init();
 
   renderer.init({
     canvas: $('c'),
-    wrap: $('canvasWrap'),
+    wrap: wrap,
     engine,
   });
 
@@ -36,58 +37,73 @@ async function init() {
 
   function loadProblem(prob) {
     if (!prob) return;
-    currentProblem = prob;
+    console.log('[loadProblem] Loading:', prob.title);
+    
+    try {
+      currentProblem = prob;
 
-    // 1. 문제 정보 표시
-    $('probTitle').textContent = `${prob.id}. ${prob.title}`;
-    $('probDesc').innerHTML = prob.description;
-    
-    // 코드 에디터 초기화 (CodeMirror 사용)
-    if (editor) {
-      editor.setValue(prob.defaultCode || '');
-      editor.refresh();
-      setTimeout(() => { editor.refresh(); }, 1);
-    } else {
-      $('codeEditor').value = prob.defaultCode || '';
-    }
-    
-    // 키워드 표시
-    if (prob.keyKeywords && prob.keyKeywords.length > 0) {
-      $('keywordsArea').style.display = 'block';
-      $('probKeywords').innerHTML = prob.keyKeywords
-        .map(k => `<span class="keyword-tag">${k}</span>`)
-        .join('');
-    } else {
-      $('keywordsArea').style.display = 'none';
-    }
-    
-    // 2. 엔진에 부품 및 모범 회로 전선 주입
-    engine.state.components = prob.components.map(c => ({ ...c }));
-    if (prob.modelWires) {
-      engine.state.wires = prob.modelWires.map(w => ({ 
-        from: w[0], 
-        to: w[1], 
-        color: w[2] || '#ff4444' 
-      }));
-    } else {
-      engine.state.wires = [];
-    }
-    
-    // 3. 렌더링 갱신 및 줌 초기화
-    renderer.drawAll();
-    engine.resetZoom(wrap.clientWidth, wrap.clientHeight);
-
-    // 3. 코드 초기화 버튼 기능
-    $('resetBtn').onclick = () => {
-      if (confirm('작성한 코드를 초기화하고 처음 상태로 되돌리시겠습니까?')) {
-        if (editor) {
-          editor.setValue(prob.defaultCode);
-        } else {
-          $('codeEditor').value = prob.defaultCode;
-        }
-        showNotif('🔄 코드가 초기화되었습니다.');
+      // 1. 문제 정보 표시
+      $('probTitle').textContent = `${prob.id}. ${prob.title}`;
+      $('probDesc').innerHTML = prob.description || '';
+      
+      // 코드 에디터 초기화
+      if (editor) {
+        editor.setValue(prob.defaultCode || '');
+        setTimeout(() => editor.refresh(), 10);
+      } else {
+        $('codeEditor').value = prob.defaultCode || '';
       }
-    };
+      
+      // 2. 엔진 데이터 주입 (방어 코드 추가)
+      engine.state.components = (prob.components || []).map(c => ({ ...c }));
+      if (prob.modelWires) {
+        engine.state.wires = prob.modelWires.map(w => ({ 
+          from: w[0], to: w[1], color: w[2] || '#ff4444' 
+        }));
+      } else {
+        engine.state.wires = [];
+      }
+      
+      // 3. 렌더링 갱신
+      renderer.drawAll();
+      if (wrap) {
+        engine.resetZoom(wrap.clientWidth, wrap.clientHeight);
+      }
+    } catch (err) {
+      console.error('[loadProblem Error]', err);
+      showNotif('⚠️ 문제를 로드하는 중 오류가 발생했습니다.', true);
+    }
+  }
+
+  function showStageSelector() {
+    console.log('[showStageSelector]');
+    $('stageOverlay').style.display = 'flex';
+  }
+
+  function hideStageSelector() {
+    console.log('[hideStageSelector]');
+    $('stageOverlay').style.display = 'none';
+  }
+
+  function initStageGrid() {
+    const grid = $('stageGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    allProblems.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'stage-card';
+      card.innerHTML = `
+        <div class="num">${i + 1}</div>
+        <div class="title">${p.title}</div>
+      `;
+      card.onclick = () => {
+        console.log('[Stage Click] Index:', i);
+        loadProblem(allProblems[i]);
+        hideStageSelector();
+        if ($('probSelect')) $('probSelect').value = i;
+      };
+      grid.appendChild(card);
+    });
   }
 
   // 문제 로드
@@ -103,7 +119,6 @@ async function init() {
       const opt = document.createElement('option');
       opt.value = idx;
       opt.textContent = `${p.id}. ${p.title}`;
-      if (p.id === 2) opt.selected = true; // 기본값 2번
       sel.appendChild(opt);
     });
 
@@ -111,16 +126,19 @@ async function init() {
       loadProblem(allProblems[e.target.value]);
     };
 
-    // 초기 문제(2번) 로드
-    const initialProb = allProblems.find(p => p.id === 2) || allProblems[0];
-    loadProblem(initialProb);
+    // 스테이지 그리드 초기화 및 표시
+    initStageGrid();
+    showStageSelector();
+
+    // 상단 '문제 목록' 버튼 이벤트 연결
+    $('listBtn').onclick = () => showStageSelector();
 
   } catch (e) {
     console.error('문제 로드 실패:', e);
   }
 
   // ── 줌 및 팬 로직 ──
-  const wrap = $('canvasWrap');
+  // wrap 변수는 이미 상단에 선언됨
   
   // 마우스 휠 줌
   wrap.addEventListener('wheel', (e) => {

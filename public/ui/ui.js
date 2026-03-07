@@ -82,6 +82,33 @@ export const ui = (() => {
     });
   }
 
+  function showStageSelector() {
+    $('stageOverlay')?.style.setProperty('display', 'flex');
+  }
+
+  function hideStageSelector() {
+    $('stageOverlay')?.style.setProperty('display', 'none');
+  }
+
+  function initStageGrid() {
+    const grid = $('stageGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    engine.state.PROBLEMS.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'stage-card';
+      card.innerHTML = `
+        <div class="num">${i + 1}</div>
+        <div class="title">${p.title}</div>
+      `;
+      card.onclick = () => {
+        loadProblem(i);
+        hideStageSelector();
+      };
+      grid.appendChild(card);
+    });
+  }
+
   function loadProblem(idx) {
     engine.state.currentProb = idx;
     const p = engine.state.PROBLEMS[idx];
@@ -95,12 +122,18 @@ export const ui = (() => {
 
     const codeEditor = $('codeEditor');
     if (codeEditor) {
-      const raw  = p.code || p.defaultCode || '';
+      const raw = p.code || p.defaultCode || '';
       const code = raw.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
-      if (codeEditor.tagName === 'TEXTAREA') {
-        codeEditor.value    = code;
+      
+      // make-circuit 모드에서는 코드가 "가이드"이므로 읽기 전용이어야 함
+      if (window.editor) {
+        window.editor.setValue(code);
+        window.editor.setOption("readOnly", true); // 편집 불가 설정
+      } else if (codeEditor.tagName === 'TEXTAREA') {
+        codeEditor.value = code;
         codeEditor.readOnly = true;
       } else {
+        // highlight.js 등을 사용하는 일반 요소(code 태그 등)인 경우
         codeEditor.textContent = code;
         if (window.hljs) {
           delete codeEditor.dataset.highlighted;
@@ -124,11 +157,20 @@ export const ui = (() => {
 
   async function loadProblems() {
     let list;
-    const isWriteCode = window.location.pathname.includes('circuit-to-code');
+    // URL 경로에 'make-code'가 포함되어 있는지 확인하여 타입 결정
+    const isWriteCode = window.location.pathname.includes('make-code.html') || window.location.pathname.includes('make-code');
     const type = isWriteCode ? 'write-code' : 'build-circuit';
     
+    console.log('[loadProblems] Type detected:', type, 'Path:', window.location.pathname);
+
     try {
       list = await api.fetchProblems(type);
+      console.log('[loadProblems] Fetched list:', list);
+      
+      if (!list || list.length === 0) {
+        showNotif('⚠️ 로드된 문제가 없습니다.', true);
+        return;
+      }
     } catch (e) {
       console.error('[fetchProblems failed]', e);
       showServerErrorUI();
@@ -142,8 +184,10 @@ export const ui = (() => {
         code: p.defaultCode || '',
         desc: p.description || p.desc || '',
       }));
+      
       initProbSelect();
-      loadProblem(0);
+      initStageGrid();
+      showStageSelector();
     } catch (e) {
       console.error('[UI build failed]', e);
       showNotif('⚠️ 화면 구성 중 오류(콘솔 확인)', true);
@@ -156,7 +200,9 @@ export const ui = (() => {
   async function submitAnswer() {
     const probId = engine.getCurrentProblemId() ?? 1;
     const formattedWires = engine.state.wires.map(w => [w.from, w.to]);
-    const userCode = $('codeEditor')?.value ?? '';
+    
+    // CodeMirror 사용 시 에디터에서 값 가져오기
+    const userCode = window.editor ? window.editor.getValue() : ($('codeEditor')?.value ?? '');
 
     // 채점 시 현재 부품 위치도 함께 전송 (grade.js가 동적 핀 위치를 알아야 함)
     const compPositions = engine.state.components.map(c => {
@@ -525,6 +571,7 @@ export const ui = (() => {
     $('submitBtn') ?.addEventListener('click', () => submitAnswer());
     $('modalClose')?.addEventListener('click', () => closeModal());
     $('probSelect')?.addEventListener('change', (e) => loadProblem(parseInt(e.target.value, 10)));
+    $('listBtn')   ?.addEventListener('click', () => showStageSelector());
 
     bindWireColorButtons();
     bindToolbarButtons();

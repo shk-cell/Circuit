@@ -32,7 +32,7 @@ const problems = [
     id: 3,
     title: "푸시버튼으로 LED 켜기",
     description: "푸시버튼을 누르면 LED가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.",
-    defaultCode: `// [힌트]\n// 1. pinMode를 사용하여 버튼 핀은 INPUT, LED 핀은 OUTPUT으로 설정하세요.\n// 2. digitalRead로 버튼의 상태(HIGH/LOW)를 읽으세요.\n// 3. digitalWrite로 버튼 상태에 따라 LED를 제어하세요.\n\nvoid setup() {\n  \n}\n\nvoid loop() {\n  \n}`,
+    defaultCode: `const int btnPin = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(btnPin, INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int buttonState = digitalRead(btnPin);\n  if (buttonState == HIGH) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n}`,
     modelWires: [
       ['5V', 'e10', '#ff4444'],    // 버튼 전원
       ['e12', 'D2', '#4488ff'],    // 버튼 신호 -> D2

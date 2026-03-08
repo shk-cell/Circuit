@@ -183,22 +183,50 @@ const problems = [
     id: 9,
     title: "조도 센서로 어두워지면 켜지는 가로등",
     description: "조도 센서(CdS)의 밝기 값을 읽어, 주변이 어두워지면 LED가 자동으로 켜지는 회로를 만드세요.\n\n[연결 조건]\n- 조도 센서 한쪽 → 5V\n- 조도 센서 반대쪽 → A0 및 10kΩ 저항의 한쪽\n- 10kΩ 저항의 반대쪽 → GND\n- LED: 220Ω 저항을 거쳐 D13에 연결, LED 음극 → GND",
-    defaultCode: `const int cdsPin = A0;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(ledPin, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int val = analogRead(cdsPin);\n  if (val < 500) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n  delay(100);\n}`,
+    defaultCode: `// [미션 힌트]\n// 1. 연결 정보 확인:\n//    - 조도 센서(CdS): A0, LED: D13\n// 2. setup():\n//    - LED 핀을 OUTPUT으로 설정하세요.\n// 3. loop():\n//    - analogRead(핀번호)로 조도 센서의 값을 읽으세요.\n//    - 'if'문을 사용하여 값이 500보다 작으면(어두우면) LED를 켜고, 아니면 끕니다.\n\nconst int cdsPin = A0;\nconst int ledPin = 13;\n\nvoid setup() {\n  // LED 핀 모드를 설정하세요\n  \n}\n\nvoid loop() {\n  // 1. 조도 센서 값을 읽어 변수에 저장하세요\n  int val = \n\n  // 2. 어두워지면(val < 500) LED를 켜고, 밝으면 끄는 조건문을 작성하세요\n  \n\n  delay(100);\n}`,
+    keyKeywords: ["pinMode", "analogRead", "digitalWrite", "if"],
+    modelWires: [
+      ['h2', 'Brail-2', '#222222'],
+      ['f10', 'Brail+10', '#ff4444'],
+      ['c13', 'Brail-13', '#222222'],
+      ['a18', 'D13', '#ff4444'],
+      ['h6', 'A0', '#4488ff'],
+      ['Brail+1', '5V', '#ff4444'],
+      ['GND2', 'Brail-1', '#222222']
+    ],
     components: [
-      { type: 'photoresistor', label: 'CdS',   pin1: 'e5',  pin2: 'e9'  },
-      { type: 'resistor',       label: '10kΩ', pin1: 'a9',  pin2: 'a13' },
-      { type: 'resistor',       label: '220Ω', pin1: 'e18', pin2: 'e22' },
-      { type: 'led',            label: 'LED',  pin1: 'a18', pin2: 'a17' },
+      { type: 'photoresistor', label: 'CdS', pin1: 'f6', pin2: 'f10' },
+      { type: 'resistor', label: '10kΩ', pin1: 'g2', pin2: 'g6' },
+      { type: 'resistor', label: '220Ω', pin1: 'b13', pin2: 'b17' },
+      { type: 'led', label: 'LED', pin1: 'a18', pin2: 'a17' }
     ],
   },
   {
     id: 10,
     title: "초음파 센서와 부저를 이용한 후방 감지기",
     description: "자동차의 후방 감지기처럼, 초음파 센서로 거리를 측정하여 물체가 30cm 이내로 가까워지면 피에조 부저에서 경고음이 울리도록 만드세요.\n\n[연결 조건]\n- 초음파 센서: VCC→5V, GND→GND, TRIG→D9, ECHO→D10\n- 피에조 부저: (+) 단자→D8, (-) 단자→GND",
-    defaultCode: `const int trigPin = 9;\nconst int echoPin = 10;\nconst int buzPin  = 8;\n\nvoid setup() {\n  pinMode(trigPin, OUTPUT);\n  pinMode(echoPin, INPUT);\n  pinMode(buzPin,  OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(trigPin, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trigPin, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trigPin, LOW);\n\n  long duration = pulseIn(echoPin, HIGH);\n  int distance  = duration * 0.034 / 2;\n\n  if (distance > 0 && distance < 30) {\n    tone(buzPin, 1000); \n  } else {\n    noTone(buzPin);\n  }\n  delay(100);\n}`,
+    defaultCode: `// [미션 힌트]\n// 1. 연결 정보 확인:\n//    - TRIG: D9, ECHO: D10, Buzzer: D8\n// 2. setup():\n//    - 각 핀의 입출력 모드를 설정하세요.\n//    - TRIG는 OUTPUT, ECHO는 INPUT, Buzzer는 OUTPUT입니다.\n// 3. loop():\n//    - 초음파 거리 측정 로직은 제공됩니다.\n//    - 'if'문을 사용하여 distance가 30cm 이내일 때 tone()을 울리세요.\n//    - 그 외에는 noTone()으로 소리를 끕니다.\n\nconst int trigPin = 9;\nconst int echoPin = 10;\nconst int buzPin  = 8;\n\nvoid setup() {\n  // 1. 각 핀의 모드를 설정하세요\n  \n}\n\nvoid loop() {\n  // 초음파 발생 및 거리 계산 (제공)\n  digitalWrite(trigPin, LOW);\n  delayMicroseconds(2);\n  digitalWrite(trigPin, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(trigPin, LOW);\n\n  long duration = pulseIn(echoPin, HIGH);\n  int distance  = duration * 0.034 / 2;\n\n  // 2. 거리가 30cm 이내일 때 부저를 제어하는 조건문을 작성하세요\n  \n\n  delay(100);\n}`,
+    keyKeywords: ["pinMode", "pulseIn", "if", "tone", "noTone"],
+    modelWires: [
+      ['f4', 'Brail+4', '#ff4444'],
+      ['f10', 'Brail-10', '#222222'],
+      ['f18', 'Brail-18', '#222222'],
+      ['GND0', 'Brail-1', '#222222'],
+      ['5V', 'Brail+1', '#ff4444'],
+      ['f6', 'D9', '#4488ff'],
+      ['D10', 'f8', '#44dd88'],
+      ['D8', 'g16', '#ffcc00']
+    ],
     components: [
-      { type: 'ultrasonic', label: 'HC-SR04', pinVCC: 'e5', pinTRIG: 'e7', pinECHO: 'e9', pinGND: 'e11' },
-      { type: 'buzzer',     label: 'Buzzer',  pin1: 'a15', pin2: 'a17' },
+      {
+        type: 'ultrasonic',
+        label: 'HC-SR04',
+        pinVCC: 'f4',
+        pinTRIG: 'f6',
+        pinECHO: 'f8',
+        pinGND: 'f10'
+      },
+      { type: 'buzzer', label: 'Buzzer', pin1: 'f16', pin2: 'f18' }
     ],
   },
 ];

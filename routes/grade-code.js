@@ -44,6 +44,14 @@ router.post('/:id', async (req, res) => {
     }
 
     // 2. GPT 상세 분석
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY') {
+      console.error('[OpenAI Error] API Key가 설정되지 않았습니다.');
+      return res.status(200).json({
+        success: true,
+        data: { passed: false, feedback: ["서버 설정에서 OpenAI API Key가 누락되었습니다. 관리자에게 문의하세요."] }
+      });
+    }
+
     const prompt = `너는 아두이노 코드 교육 채점 선생님이야.
 학생이 '회로 보고 코드 작성' 문제를 풀고 있어.
 
@@ -59,6 +67,7 @@ ${userCode}
 
 위 회로 구성을 참고했을 때, 학생의 코드가 목표를 달성하는지 판단해줘.
 코드의 문법이 맞는지, 회로에 연결된 핀 번호를 정확히 사용했는지 확인해야 해.
+블록 코딩에서 생성된 코드의 경우, void setup()이나 void loop() 내부에 명령어들이 정확히 포함되어 있는지 유심히 봐줘.
 
 출력형식(JSON):
 {
@@ -84,8 +93,8 @@ ${userCode}
     });
 
   } catch (error) {
-    console.error('Code grading error:', error);
-    res.status(500).json({ success: false, message: '채점 중 오류가 발생했습니다.' });
+    console.error('Code grading error 상세:', error);
+    res.status(500).json({ success: false, message: `채점 실패: ${error.message}` });
   }
 });
 

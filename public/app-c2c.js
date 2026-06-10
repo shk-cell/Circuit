@@ -17,7 +17,10 @@ let allProblems = [];
 function initCodeMirror() {
   const textarea = $('codeEditor');
   if (!textarea) return;
-  
+  if (typeof CodeMirror === 'undefined') {
+    console.warn('[Init] CodeMirror not loaded (CDN 미로드) — 텍스트 입력으로 대체');
+    return;
+  }
   editor = CodeMirror.fromTextArea(textarea, {
     lineNumbers: true,
     mode: "text/x-c++src",
@@ -26,7 +29,6 @@ function initCodeMirror() {
     tabSize: 2,
     lineWrapping: true
   });
-
   editor.on('focus', () => editor.refresh());
   console.log('[Init] CodeMirror initialized');
 }
@@ -37,6 +39,10 @@ function initCodeMirror() {
 function initBlockly() {
   const blocklyDiv = $('blocklyDiv');
   if (!blocklyDiv) return;
+  if (typeof Blockly === 'undefined') {
+    console.warn('[Init] Blockly not loaded (CDN 미로드) — 블록코딩 비활성화');
+    return;
+  }
 
   const toolbox = {
     "kind": "categoryToolbox",
@@ -86,7 +92,7 @@ function loadProblem(prob) {
     setTimeout(() => editor.refresh(), 50);
   }
 
-  if (workspace) {
+  if (workspace && typeof Blockly !== 'undefined') {
     workspace.clear();
     const blocksXml = prob.defaultBlocks || '<xml><block type="arduino_functions" x="40" y="20"></block></xml>';
     try {
@@ -139,8 +145,8 @@ async function main() {
   
   // 2. 엔진 및 에디터 초기화
   engine.init();
-  initCodeMirror();
-  initBlockly();
+  try { initCodeMirror(); } catch(e) { console.error('[initCodeMirror]', e); }
+  try { initBlockly(); }   catch(e) { console.error('[initBlockly]', e); }
   
   // 3. 만약 블록 모드라면 사이즈 재계산
   if (mode === 'block' && workspace) {

@@ -9,7 +9,7 @@ const envPath = app.isPackaged
 require('dotenv').config({ path: envPath });
 
 // Express 서버 시작
-require('./server.js');
+const server = require('./server.js');
 
 let mainWindow;
 
@@ -49,6 +49,11 @@ app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   app.quit();
+});
+
+// 앱 종료 시 Express 서버 명시적으로 닫아 포트 해제
+app.on('before-quit', () => {
+  server.close();
 });
 
 app.on('activate', () => {

@@ -22,6 +22,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`✅ CircuitLab 서버 실행 중: http://localhost:${PORT}`);
 });
+
+module.exports = server;

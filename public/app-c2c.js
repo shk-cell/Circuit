@@ -146,11 +146,13 @@ async function main() {
   // 2. 엔진 및 에디터 초기화
   engine.init();
   try { initCodeMirror(); } catch(e) { console.error('[initCodeMirror]', e); }
-  try { initBlockly(); }   catch(e) { console.error('[initBlockly]', e); }
-  
-  // 3. 만약 블록 모드라면 사이즈 재계산
-  if (mode === 'block' && workspace) {
-    Blockly.svgResize(workspace);
+
+  // Blockly는 block 모드일 때만 주입 (숨겨진 div에 주입하면 UI 깨짐)
+  if (mode === 'block') {
+    try { initBlockly(); } catch(e) { console.error('[initBlockly]', e); }
+    if (workspace && typeof Blockly !== 'undefined') {
+      Blockly.svgResize(workspace);
+    }
   }
 
   renderer.init({ canvas: $('c'), wrap: $('canvasWrap'), engine });

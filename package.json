@@ -2,10 +2,12 @@
   "name": "circuitlab",
   "version": "1.0.0",
   "description": "회로 학습 플랫폼",
-  "main": "server.js",
+  "main": "electron-main.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "electron": "electron .",
+    "electron:build": "electron-builder --win"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -14,6 +16,32 @@
     "openai": "^6.25.0"
   },
   "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
     "nodemon": "^3.0.1"
+  },
+  "build": {
+    "appId": "com.circuit.circuitlab",
+    "productName": "CircuitLab",
+    "files": [
+      "**/*",
+      "!.git/**",
+      "!.gitignore",
+      "!.gitattributes",
+      "!README.md"
+    ],
+    "extraResources": [
+      {
+        "from": ".env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

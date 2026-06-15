@@ -1,13 +1,11 @@
 import { api } from './api.js';
 import { engine } from './circuit/engine.js';
 import { renderer } from './circuit/renderer.js';
-import { ArduinoGenerator } from './blockly-arduino.js';
 
 const $ = (id) => document.getElementById(id);
 
 // 전역 변수
 let editor;
-let workspace;
 let currentProblem = null;
 let allProblems = [];
 
@@ -34,49 +32,7 @@ function initCodeMirror() {
 }
 
 /**
- * 2. Blockly 워크스페이스 초기화
- */
-function initBlockly() {
-  const blocklyDiv = $('blocklyDiv');
-  if (!blocklyDiv) return;
-  if (typeof Blockly === 'undefined') {
-    console.warn('[Init] Blockly not loaded (CDN 미로드) — 블록코딩 비활성화');
-    return;
-  }
-
-  const toolbox = {
-    "kind": "categoryToolbox",
-    "contents": [
-      { "kind": "category", "name": "기초", "colour": "#4c97ff", "contents": [{ "kind": "block", "type": "arduino_functions" }, { "kind": "block", "type": "arduino_pin_mode" }, { "kind": "block", "type": "arduino_delay" }] },
-      { "kind": "category", "name": "입출력", "colour": "#10b981", "contents": [{ "kind": "block", "type": "arduino_digital_write" }, { "kind": "block", "type": "arduino_digital_read" }, { "kind": "block", "type": "arduino_analog_read" }, { "kind": "block", "type": "arduino_analog_write" }] },
-      { "kind": "category", "name": "제어", "colour": "#ff6680", "contents": [{ "kind": "block", "type": "controls_if" }] },
-      { "kind": "category", "name": "연산", "colour": "#59c059", "contents": [{ "kind": "block", "type": "logic_compare" }, { "kind": "block", "type": "logic_operation" }, { "kind": "block", "type": "math_number" }, { "kind": "block", "type": "math_arithmetic" }] },
-      { "kind": "category", "name": "변수", "colour": "#a55b80", "custom": "VARIABLE" },
-      { "kind": "category", "name": "고급/센서", "colour": "#8b5cf6", "contents": [{ "kind": "block", "type": "arduino_ultrasonic_read" }, { "kind": "block", "type": "arduino_map" }, { "kind": "block", "type": "arduino_servo_write" }, { "kind": "block", "type": "arduino_tone" }, { "kind": "block", "type": "arduino_notone" }, { "kind": "block", "type": "arduino_serial_begin" }, { "kind": "block", "type": "arduino_serial_print" }] }
-    ]
-  };
-
-  workspace = Blockly.inject(blocklyDiv, {
-    toolbox: toolbox,
-    scrollbars: true,
-    trashcan: true,
-    zoom: { controls: true, wheel: true }
-  });
-
-  workspace.addChangeListener(() => {
-    const mode = new URLSearchParams(window.location.search).get('mode');
-    if (mode === 'block' && editor) {
-      const code = ArduinoGenerator.workspaceToCode(workspace);
-      if (editor.getValue() !== code) {
-        editor.setValue(code);
-      }
-    }
-  });
-  console.log('[Init] Blockly initialized');
-}
-
-/**
- * 3. 문제 로드 및 UI 반영
+ * 2. 문제 로드 및 UI 반영
  */
 function loadProblem(prob) {
   if (!prob) return;
@@ -92,23 +48,6 @@ function loadProblem(prob) {
     setTimeout(() => editor.refresh(), 50);
   }
 
-  // Blockly lazy 초기화: 처음 문제를 로드할 때 workspace가 없으면 여기서 초기화
-  const urlMode = new URLSearchParams(window.location.search).get('mode');
-  if (urlMode === 'block' && !workspace && typeof Blockly !== 'undefined') {
-    try { initBlockly(); } catch(e) { console.error('[lazy initBlockly]', e); }
-    if (workspace) {
-      try { Blockly.svgResize(workspace); } catch(e) { console.warn('[svgResize]', e); }
-    }
-  }
-
-  if (workspace && typeof Blockly !== 'undefined') {
-    workspace.clear();
-    const blocksXml = prob.defaultBlocks || '<xml><block type="arduino_functions" x="40" y="20"></block></xml>';
-    try {
-      Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(blocksXml), workspace);
-    } catch (e) { console.error(e); }
-  }
-
   engine.state.components = (prob.components || []).map(c => ({ ...c }));
   engine.state.wires = (prob.modelWires || []).map(w => ({ from: w[0], to: w[1], color: w[2] || '#ff4444' }));
   
@@ -116,47 +55,19 @@ function loadProblem(prob) {
 }
 
 /**
- * 4. 모드 선택 및 영역 노출
+ * 3. 미션 선택 오버레이 노출
  */
 function setupMode() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const mode = urlParams.get('mode');
-  
-  const choiceOverlay = $('choiceOverlay');
-  const stageOverlay = $('stageOverlay');
-  const areaBlock = $('blocklyArea');
-  const areaCode = $('codeArea');
-
-  if (mode === 'block') {
-    choiceOverlay.style.display = 'none';
-    stageOverlay.style.display = 'flex';
-    areaBlock.style.display = 'flex'; // flex로 설정하여 가득 채움
-    areaCode.style.display = 'none';
-    $('editorLabel').textContent = '프로그래밍 (블록코딩)';
-    return 'block';
-  } else if (mode === 'text') {
-    choiceOverlay.style.display = 'none';
-    stageOverlay.style.display = 'flex';
-    areaBlock.style.display = 'none';
-    areaCode.style.display = 'flex';
-    $('editorLabel').textContent = '프로그래밍 (텍스트 코딩)';
-    return 'text';
-  } else {
-    choiceOverlay.style.display = 'flex';
-    stageOverlay.style.display = 'none';
-    return null;
-  }
+  $('stageOverlay').style.display = 'flex';
 }
 
 async function main() {
-  // 1. 모드 먼저 체크 및 영역 노출 (Blockly 사이즈 계산을 위함)
-  const mode = setupMode();
-  
+  // 1. 미션 선택 오버레이 노출
+  setupMode();
+
   // 2. 엔진 및 에디터 초기화
   engine.init();
   try { initCodeMirror(); } catch(e) { console.error('[initCodeMirror]', e); }
-
-  // Blockly는 문제 선택 후 loadProblem에서 lazy 초기화 (여기서 호출 시 stageOverlay 표시 방해)
 
   try { renderer.init({ canvas: $('c'), wrap: $('canvasWrap'), engine }); } catch(e) { console.error('[renderer.init]', e); }
   try { renderer.startLoop(); } catch(e) { console.error('[renderer.startLoop]', e); }
@@ -233,15 +144,13 @@ async function main() {
     });
 
     // 버튼들
-    $('chooseBlock').onclick = () => window.location.href = '?mode=block';
-    $('chooseText').onclick = () => window.location.href = '?mode=text';
     $('listBtn').onclick = () => $('stageOverlay').style.display = 'flex';
     $('resetBtn').onclick = () => { if(confirm('초기화할까요?')) loadProblem(currentProblem); };
     
     $('submitBtn').onclick = async () => {
       if (!currentProblem) return;
       showNotif('🤖 채점 중...');
-      const userCode = (mode === 'block') ? ArduinoGenerator.workspaceToCode(workspace) : editor.getValue();
+      const userCode = editor ? editor.getValue() : ($('codeEditor')?.value ?? '');
       const result = await api.gradeCode(currentProblem.id, {
         userCode,
         wires: engine.state.wires.map(w => [w.from, w.to]),

@@ -2,6 +2,12 @@
  * 최신 Blockly 규격에 맞춘 Arduino 코드 생성기
  */
 
+export let ArduinoGenerator = null;
+
+if (typeof Blockly === 'undefined') {
+  console.warn('[blockly-arduino] Blockly not loaded — ArduinoGenerator 비활성화');
+} else {
+
 // 1. 블록 정의 (JSON) - 기존과 동일
 Blockly.defineBlocksWithJsonArray([
   {
@@ -159,7 +165,7 @@ Blockly.defineBlocksWithJsonArray([
 ]);
 
 // 2. 아두이노 코드 생성기 설정
-const ArduinoGenerator = new Blockly.Generator('Arduino');
+ArduinoGenerator = new Blockly.Generator('Arduino');
 ArduinoGenerator.PRECEDENCE_ATOMIC = 0;
 ArduinoGenerator.INDENT = '  ';
 
@@ -317,4 +323,4 @@ FB['variables_set'] = function(block, generator) {
   return `${varName} = ${val};\n`;
 };
 
-export { ArduinoGenerator };
+} // end if (typeof Blockly !== 'undefined')

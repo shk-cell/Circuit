@@ -304,9 +304,8 @@ export const ui = (() => {
       const wx = (e.clientX - r.left  - engine.state.offsetX) / engine.state.scale;
       const wy = (e.clientY - r.top   - engine.state.offsetY) / engine.state.scale;
 
-      // ✅ 부품 바디 클릭 → 드래그 시작 (핀 위 클릭보다 우선순위 낮음)
-      const pid = engine.getPinAt(wx, wy);
-      if (!pid && !engine.state.startPin) {
+      // ✅ 부품 바디 클릭 → 드래그 시작 (와이어 연결 모드가 아닐 때 핀보다 우선)
+      if (!engine.state.startPin) {
         const hit = engine.getCompAt(wx, wy);
         if (hit) {
           // 버튼이면 드래그 시작 (클릭/드래그 구분은 mouseup에서)

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, globalShortcut } = require('electron');
 const path = require('path');
 const http = require('http');
 
@@ -42,6 +42,11 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+
+  // F12로 DevTools 토글
+  globalShortcut.register('F12', () => {
+    if (mainWindow) mainWindow.webContents.toggleDevTools();
   });
 }
 

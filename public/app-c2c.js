@@ -92,6 +92,15 @@ function loadProblem(prob) {
     setTimeout(() => editor.refresh(), 50);
   }
 
+  // Blockly lazy 초기화: 처음 문제를 로드할 때 workspace가 없으면 여기서 초기화
+  const urlMode = new URLSearchParams(window.location.search).get('mode');
+  if (urlMode === 'block' && !workspace && typeof Blockly !== 'undefined') {
+    try { initBlockly(); } catch(e) { console.error('[lazy initBlockly]', e); }
+    if (workspace) {
+      try { Blockly.svgResize(workspace); } catch(e) { console.warn('[svgResize]', e); }
+    }
+  }
+
   if (workspace && typeof Blockly !== 'undefined') {
     workspace.clear();
     const blocksXml = prob.defaultBlocks || '<xml><block type="arduino_functions" x="40" y="20"></block></xml>';
@@ -147,16 +156,10 @@ async function main() {
   engine.init();
   try { initCodeMirror(); } catch(e) { console.error('[initCodeMirror]', e); }
 
-  // Blockly는 block 모드일 때만 주입 (숨겨진 div에 주입하면 UI 깨짐)
-  if (mode === 'block') {
-    try { initBlockly(); } catch(e) { console.error('[initBlockly]', e); }
-    if (workspace && typeof Blockly !== 'undefined') {
-      Blockly.svgResize(workspace);
-    }
-  }
+  // Blockly는 문제 선택 후 loadProblem에서 lazy 초기화 (여기서 호출 시 stageOverlay 표시 방해)
 
-  renderer.init({ canvas: $('c'), wrap: $('canvasWrap'), engine });
-  renderer.startLoop();
+  try { renderer.init({ canvas: $('c'), wrap: $('canvasWrap'), engine }); } catch(e) { console.error('[renderer.init]', e); }
+  try { renderer.startLoop(); } catch(e) { console.error('[renderer.startLoop]', e); }
 
   // 줌 및 팬 로직 복구
   const wrap = $('canvasWrap');
@@ -225,7 +228,7 @@ async function main() {
       const card = document.createElement('div');
       card.className = 'stage-card';
       card.innerHTML = `<div class="num">${p.id}</div><div class="title">${p.title}</div>`;
-      card.onclick = () => { loadProblem(p); $('stageOverlay').style.display = 'none'; };
+      card.onclick = () => { try { loadProblem(p); } catch(e) { console.error('[loadProblem]', e); } $('stageOverlay').style.display = 'none'; };
       grid.appendChild(card);
     });
 

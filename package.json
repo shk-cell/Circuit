@@ -10,6 +10,7 @@
     "electron:build": "electron-builder --win"
   },
   "dependencies": {
+    "blockly": "^12.5.1",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^4.18.2",

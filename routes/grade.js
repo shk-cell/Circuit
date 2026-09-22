@@ -93,6 +93,12 @@ function reachableAll(adj, startPin) {
 
 /**
  * BFS로 start에서 도달 가능한 targets 중 해당하는 것들을 Set으로 반환
+ *
+ * 5V/3V3/GND는 여러 독립된 회로가 공유하는 공용 레일이다. LED 등은 방향성 없는
+ * 그래프 edge로 모델링되어 있어서, 레일을 그냥 통과시키면 "내 저항은 5V에
+ * 연결 안 됐지만 GND를 타고 옆 회로의 LED를 거꾸로 거쳐 5V에 우회 도달"하는
+ * 식의 오판정이 생긴다. 그래서 레일 핀은 '도달'은 인정하되(found에 추가),
+ * 그 지점을 통과해서 더 확장하지는 않는다.
  */
 function reachableSet(adj, startPin, targets) {
   const targetSet = new Set(targets);
@@ -103,6 +109,7 @@ function reachableSet(adj, startPin, targets) {
 
   while (queue.length) {
     const cur = queue.shift();
+    if (cur !== startPin && RAIL_PINS.has(cur)) continue;
     for (const next of (adj[cur] || [])) {
       if (targetSet.has(next)) found.add(next);
       if (!visited.has(next)) {
@@ -116,6 +123,7 @@ function reachableSet(adj, startPin, targets) {
 
 const POWER_PINS   = ['5V', '3V3'];
 const GND_PINS     = ['GND0', 'GND1', 'GND2'];
+const RAIL_PINS    = new Set([...POWER_PINS, ...GND_PINS]);
 const DIGITAL_PINS = Array.from({length: 14}, (_, i) => `D${i}`);
 const ANALOG_PINS  = Array.from({length: 6},  (_, i) => `A${i}`);
 const ALL_NAMED    = [...POWER_PINS, ...GND_PINS, ...DIGITAL_PINS, ...ANALOG_PINS];
@@ -210,6 +218,7 @@ router.post('/:id', async (req, res) => {
     // 문제별 사전 체크 (BFS 기반)
     // ================================================================
     let preCheck = '';
+    let preCheckPassed = null;
 
     // ── 문제 1: LED 켜기 (5V) ───────────────────────────────────────────
     if (problemId === 1) {
@@ -238,6 +247,7 @@ router.post('/:id', async (req, res) => {
 체크3 (LED ↔ 저항 연결):     ${chk3 ? '✅ 통과' : '❌ 실패 - LED와 저항이 서로 연결되지 않음 (같은 행에 꽂았는지 확인!)'}
 최종: ${chk1&&chk2&&chk3 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3;
     }
 
     // ── 문제 2: LED 3개 켜기 ──────────────────────────────────────────
@@ -278,6 +288,7 @@ router.post('/:id', async (req, res) => {
 ${checkResults.join('\n')}
 최종: ${allPassed ? '✅ 정답' : '❌ 오답 (모든 LED가 독립적인 저항을 거쳐 5V와 GND에 연결되어야 합니다)'}
 `;
+      preCheckPassed = allPassed;
     }
 
     // ── 문제 3: 푸시버튼으로 LED 켜기 ──────────────────────────────
@@ -307,6 +318,7 @@ ${checkResults.join('\n')}
 체크4 (LED → GND): ${chk4 ? '✅ 통과' : '❌ 실패 - LED 음극이 GND에 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4;
     }
 
     // ── 문제 4: 버튼 2개로 LED 2개 독립 제어 ───────────────────────
@@ -359,6 +371,7 @@ ${checkResults.join('\n')}
 체크6 (220Ω(2)→D13, LED2→GND): ${chk6 ? '✅ 통과' : '❌ 실패 - 두 번째 220Ω이 D13에 연결되지 않거나 LED2 음극이 GND에 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5&&chk6 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5 && chk6;
     }
 
     // ── 문제 5: 초음파 센서로 거리에 따라 LED 켜기 ─────────────────
@@ -395,6 +408,7 @@ ${checkResults.join('\n')}
 체크5 (220Ω→D13, LED→GND):   ${chk5 ? '✅ 통과' : '❌ 실패 - 220Ω이 D13에 연결되지 않거나 LED 음극이 GND에 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5;
     }
 
     // ── 문제 6: 버튼 2개로 서보모터 방향 제어 ──────────────────────
@@ -433,6 +447,7 @@ ${checkResults.join('\n')}
 체크5 (BTN2→5V+D3, 10kΩ2→D3+GND): ${chk5 ? '✅ 통과' : '❌ 실패 - 버튼2 또는 풀다운 저항2 연결 오류'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5;
     }
 
     // ── 문제 7: 가변저항으로 서보모터 각도 조절 ────────────────────
@@ -457,6 +472,7 @@ ${checkResults.join('\n')}
 체크6 (서보 SIG → D9):      ${chk6 ? '✅ 통과' : '❌ 실패 - 서보 SIG가 D9에 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5&&chk6 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5 && chk6;
     }
 
     // ── 문제 8: 슬라이드 스위치로 LED 켜고 끄기 ────────────────────
@@ -496,6 +512,7 @@ ${checkResults.join('\n')}
 체크5 (LED 음극 → GND):        ${chk5 ? '✅ 통과' : '❌ 실패 - LED 음극이 GND에 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5;
     }
 
     // ── 문제 9: 조도 센서로 어두워지면 켜지는 가로등 ─────────────────
@@ -537,6 +554,7 @@ ${checkResults.join('\n')}
 체크5 (LED 음극 → GND):       ${chk5 ? '✅ 통과' : '❌ 실패 - LED의 음극(GND쪽)이 연결되지 않음'}
 최종: ${chk1&&chk2&&chk3&&chk4&&chk5 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4 && chk5;
     }
 
     // ── 문제 10: 초음파 센서와 부저를 이용한 후방 감지기 ───────────────
@@ -569,6 +587,7 @@ ${checkResults.join('\n')}
 체크4 (부저 - 연결): ${chk4 ? '✅ 통과' : '❌ 실패 - 부저의 (-) 단자를 GND에 연결하세요'}
 최종: ${chk1&&chk2&&chk3&&chk4 ? '✅ 정답' : '❌ 오답'}
 `;
+      preCheckPassed = chk1 && chk2 && chk3 && chk4;
     }
     // ================================================================
     const prompt = `너는 아두이노 회로 교육 채점 도우미야.
@@ -618,9 +637,16 @@ ${preCheck ? '⚠️ 위 서버 사전 체크 결과가 있습니다. isCorrect�
     const result = JSON.parse(response.choices[0].message.content);
     console.log('GPT 채점 결과:', result);
 
+    // 서버 사전 체크(BFS 기반, 결정론적)가 존재하는 문제는 그 결과를 최종 판정으로 강제한다.
+    // GPT의 isCorrect는 preCheck 지시를 무시/오독할 수 있어 판정에 신뢰할 수 없고, feedback 문구 생성에만 사용한다.
+    const passed = preCheckPassed !== null ? preCheckPassed : result.isCorrect;
+    if (preCheckPassed !== null && preCheckPassed !== result.isCorrect) {
+      console.warn(`[grade] GPT 판정(${result.isCorrect})이 서버 사전 체크(${preCheckPassed})와 불일치 — 사전 체크 결과를 사용함`);
+    }
+
     res.json({
       success: true,
-      data: { problemId, passed: result.isCorrect, feedback: [result.feedback] }
+      data: { problemId, passed, feedback: [result.feedback] }
     });
 
   } catch (error) {

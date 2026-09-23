@@ -31,18 +31,16 @@ const problems = [
   {
     id: 3,
     title: "푸시버튼으로 LED 켜기",
-    description: "푸시버튼을 누르면 LED가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.",
-    defaultCode: `const int btnPin = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(btnPin, INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int buttonState = digitalRead(btnPin);\n  if (buttonState == HIGH) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n}`,
+    description: "푸시버튼을 누르면 LED가 켜지고, 버튼을 누르지 않으면 LED가 꺼집니다.\n\n[연결 조건]\n- 버튼 한쪽 → D2, 버튼 반대쪽 → GND\n  (아두이노 내부 풀업 저항 INPUT_PULLUP 사용 → 별도 저항 필요 없음)\n- LED: 220Ω 저항을 거쳐 D13에 연결, LED 음극 → GND\n\n※ INPUT_PULLUP은 버튼을 누르면 LOW, 떼면 HIGH가 읽힙니다.",
+    defaultCode: `const int btnPin = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(btnPin, INPUT_PULLUP); // 내부 풀업 저항 사용\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  // 버튼을 누르면 LOW\n  if (digitalRead(btnPin) == LOW) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n}`,
     modelWires: [
-      ['5V', 'e10', '#ff4444'],    // 버튼 전원
-      ['e12', 'D2', '#4488ff'],    // 버튼 신호 -> D2
-      ['a16', 'GND0', '#222222'],  // 10k 저항 끝단 -> GND
-      ['D13', 'e21', '#ff4444'],   // D13 -> 220 저항 시작
+      ['e10', 'D2', '#4488ff'],    // 버튼 한쪽 -> D2 (INPUT_PULLUP)
+      ['e12', 'GND0', '#222222'],  // 버튼 반대쪽 -> GND
+      ['D13', 'e25', '#ff4444'],   // D13 -> 220Ω 저항
       ['a20', 'GND1', '#222222']   // LED 음극 -> GND
     ],
     components: [
       { type: 'button',   label: 'BTN',  pin1: 'e10', pin2: 'e12', pin3: 'f10', pin4: 'f12' },
-      { type: 'resistor', label: '10kΩ', pin1: 'a12', pin2: 'a16' }, // 가로 연결
       { type: 'resistor', label: '220Ω', pin1: 'e21', pin2: 'e25' }, // 가로 연결
       { type: 'led',      label: 'LED',  pin1: 'a21', pin2: 'a20' },
     ],
@@ -50,15 +48,13 @@ const problems = [
   {
     id: 4,
     title: "버튼 2개로 LED 2개 독립 제어",
-    description: "버튼1을 누르면 LED1만, 버튼2를 누르면 LED2만 켜지는 회로를 만드세요.\n버튼1 → D2, 버튼2 → D3, LED1 → D12, LED2 → D13\n각 버튼에 10kΩ 풀다운 저항, 각 LED에 220Ω 저항 연결.\n\n[정답 판단 방법]\n체크1: BTN1이 5V와 D2에 연결되어 있는가?\n체크2: 10kΩ(1)이 D2와 GND에 연결되어 있는가?\n체크3: 220Ω(1)이 D12에 연결되어 있고 LED1 음극이 GND인가?\n체크4: BTN2가 5V와 D3에 연결되어 있는가?\n체크5: 10kΩ(2)이 D3와 GND에 연결되어 있는가?\n체크6: 220Ω(2)이 D13에 연결되어 있고 LED2 음극이 GND인가?\n체크1~6이 모두 YES면 isCorrect: true",
-    defaultCode: `const int btn1 = 2, btn2 = 3;\nconst int led1 = 12, led2 = 13;\n\nvoid setup() {\n  pinMode(btn1, INPUT);\n  pinMode(btn2, INPUT);\n  pinMode(led1, OUTPUT);\n  pinMode(led2, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(led1, digitalRead(btn1));\n  digitalWrite(led2, digitalRead(btn2));\n}`,
+    description: "버튼1을 누르면 LED1만, 버튼2를 누르면 LED2만 켜지는 회로를 만드세요.\n\n[연결 조건]\n- 버튼1: 한쪽 → D2, 반대쪽 → GND\n- 버튼2: 한쪽 → D3, 반대쪽 → GND\n  (아두이노 내부 풀업 저항 INPUT_PULLUP 사용 → 별도 저항 필요 없음)\n- LED1: 220Ω 저항을 거쳐 D12, LED1 음극 → GND\n- LED2: 220Ω 저항을 거쳐 D13, LED2 음극 → GND\n\n※ INPUT_PULLUP은 버튼을 누르면 LOW, 떼면 HIGH가 읽힙니다.",
+    defaultCode: `const int btn1 = 2, btn2 = 3;\nconst int led1 = 12, led2 = 13;\n\nvoid setup() {\n  pinMode(btn1, INPUT_PULLUP);\n  pinMode(btn2, INPUT_PULLUP);\n  pinMode(led1, OUTPUT);\n  pinMode(led2, OUTPUT);\n}\n\nvoid loop() {\n  // 버튼을 누르면 LOW → 반전해서 LED에 출력\n  digitalWrite(led1, !digitalRead(btn1));\n  digitalWrite(led2, !digitalRead(btn2));\n}`,
     components: [
       { type: 'button',   label: 'BTN1', pin1: 'e5',  pin2: 'e7',  pin3: 'f5',  pin4: 'f7'  },
-      { type: 'resistor', label: '10kΩ', pin1: 'a7',  pin2: 'a11' },
       { type: 'resistor', label: '220Ω', pin1: 'e16', pin2: 'e20' },
       { type: 'led',      label: 'LED1', pin1: 'a16', pin2: 'a15' },
       { type: 'button',   label: 'BTN2', pin1: 'e23', pin2: 'e25', pin3: 'f23', pin4: 'f25' },
-      { type: 'resistor', label: '10kΩ', pin1: 'a25', pin2: 'a29' },
       { type: 'resistor', label: '220Ω', pin1: 'e2',  pin2: 'e6'  },
       { type: 'led',      label: 'LED2', pin1: 'a2',  pin2: 'a1'  },
     ],
@@ -77,14 +73,12 @@ const problems = [
   {
     id: 6,
     title: "버튼 2개로 서보모터 방향 제어",
-    description: "버튼1을 누르면 서보모터가 왼쪽(-10도), 버튼2를 누르면 오른쪽(+10도)으로 회전하는 회로를 만드세요.\n\n[연결 조건]\n- 서보모터 VCC → 5V\n- 서보모터 GND → GND\n- 서보모터 SIG → D9\n- 버튼1 → 5V + D2, 10kΩ(1) → D2 + GND\n- 버튼2 → 5V + D3, 10kΩ(2) → D3 + GND\n\n[정답 판단 방법]\n체크1: 서보 VCC핀이 5V에 연결되어 있는가?\n체크2: 서보 GND핀이 GND에 연결되어 있는가?\n체크3: 서보 SIG핀이 D9에 연결되어 있는가?\n체크4: BTN1이 5V와 D2에 모두 연결되어 있고, 10kΩ(1)이 D2와 GND에 연결되어 있는가?\n체크5: BTN2가 5V와 D3에 모두 연결되어 있고, 10kΩ(2)이 D3와 GND에 연결되어 있는가?\n\n체크1~5가 모두 YES면 isCorrect: true",
-    defaultCode: `#include <Servo.h>\n\nServo servo;\nconst int btn1 = 2;\nconst int btn2 = 3;\nint angle = 90;\n\nvoid setup() {\n  servo.attach(9);\n  pinMode(btn1, INPUT);\n  pinMode(btn2, INPUT);\n}\n\nvoid loop() {\n  if (digitalRead(btn1) && angle > 0)   angle -= 10;\n  if (digitalRead(btn2) && angle < 180) angle += 10;\n  servo.write(angle);\n  delay(150);\n}`,
+    description: "버튼1을 누르면 서보모터가 왼쪽(-10도), 버튼2를 누르면 오른쪽(+10도)으로 회전하는 회로를 만드세요.\n\n[연결 조건]\n- 서보모터 VCC → 5V\n- 서보모터 GND → GND\n- 서보모터 SIG → D9\n- 버튼1: 한쪽 → D2, 반대쪽 → GND\n- 버튼2: 한쪽 → D3, 반대쪽 → GND\n  (아두이노 내부 풀업 저항 INPUT_PULLUP 사용 → 별도 저항 필요 없음)\n\n※ INPUT_PULLUP은 버튼을 누르면 LOW, 떼면 HIGH가 읽힙니다.",
+    defaultCode: `#include <Servo.h>\n\nServo servo;\nconst int btn1 = 2;\nconst int btn2 = 3;\nint angle = 90;\n\nvoid setup() {\n  servo.attach(9);\n  pinMode(btn1, INPUT_PULLUP);\n  pinMode(btn2, INPUT_PULLUP);\n}\n\nvoid loop() {\n  // 버튼을 누르면 LOW\n  if (digitalRead(btn1) == LOW && angle > 0)   angle -= 10;\n  if (digitalRead(btn2) == LOW && angle < 180) angle += 10;\n  servo.write(angle);\n  delay(150);\n}`,
     components: [
       { type: 'servo',    label: 'Servo',  pinVCC: 'f2',  pinGND: 'f3',  pinSIG: 'f4'  },
       { type: 'button',   label: 'BTN1',   pin1: 'e8',  pin2: 'e10', pin3: 'f8',  pin4: 'f10' },
-      { type: 'resistor', label: '10kΩ',   pin1: 'a10', pin2: 'a14' },
       { type: 'button',   label: 'BTN2',   pin1: 'e18', pin2: 'e20', pin3: 'f18', pin4: 'f20' },
-      { type: 'resistor', label: '10kΩ',   pin1: 'a20', pin2: 'a24' },
     ],
   },
   {
@@ -100,11 +94,10 @@ const problems = [
   {
     id: 8,
     title: "슬라이드 스위치로 LED 켜고 끄기",
-    description: "3핀 슬라이드 스위치를 이용해 LED를 켜고 끄는 회로를 만드세요.\n\n[슬라이드 스위치 핀 구조]\n- ON1(왼쪽)  : 스위치를 왼쪽으로 밀면 COM과 연결\n- COM(가운데): 항상 연결된 공통 핀\n- ON2(오른쪽): 스위치를 오른쪽으로 밀면 COM과 연결\n\n[연결 조건]\n- ON1(왼쪽)  → 10kΩ → GND  (스위치 OFF 시 D2를 GND로 풀다운)\n- COM(가운데)→ D2\n- ON2(오른쪽)→ 5V\n- 220Ω → D13과 LED 양극 사이\n- LED 음극 → GND\n\n[동작 원리]\n스위치 오른쪽: COM↔ON2 연결 → D2가 5V → LED ON\n스위치 왼쪽:  COM↔ON1 연결 → D2가 10kΩ 통해 GND → LED OFF\n\n[정답 판단]\n체크1: COM이 D2에 연결되어 있는가?\n체크2: ON2가 5V에 연결되어 있는가?\n체크3: ON1이 10kΩ을 거쳐 GND에 연결되어 있는가?\n체크4: 220Ω이 D13에 연결되어 있는가?\n체크5: LED 음극이 GND에 연결되어 있는가?\n체크1~5가 모두 YES면 isCorrect: true",
-    defaultCode: `const int swPin  = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(swPin,  INPUT);\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  int state = digitalRead(swPin);\n  digitalWrite(ledPin, state);\n  delay(10);\n}`,
+    description: "3핀 슬라이드 스위치를 이용해 LED를 켜고 끄는 회로를 만드세요.\n\n[슬라이드 스위치 핀 구조]\n- ON1(왼쪽)  : 스위치를 왼쪽으로 밀면 COM과 연결\n- COM(가운데): 공통 핀\n- ON2(오른쪽): 스위치를 오른쪽으로 밀면 COM과 연결\n\n[연결 조건]\n- COM(가운데) → D2\n- ON1(왼쪽)   → GND\n- ON2(오른쪽) → 연결하지 않음\n  (아두이노 내부 풀업 저항 INPUT_PULLUP 사용 → 별도 저항 필요 없음)\n- LED: 220Ω 저항을 거쳐 D13에 연결, LED 음극 → GND\n\n[동작 원리]\n스위치 왼쪽:  COM↔ON1 연결 → D2가 GND → LOW → LED ON\n스위치 오른쪽: D2가 내부 풀업으로 HIGH → LED OFF",
+    defaultCode: `const int swPin  = 2;\nconst int ledPin = 13;\n\nvoid setup() {\n  pinMode(swPin,  INPUT_PULLUP); // 내부 풀업 저항 사용\n  pinMode(ledPin, OUTPUT);\n}\n\nvoid loop() {\n  // 스위치가 GND 쪽(왼쪽)이면 LOW → LED 켜기\n  if (digitalRead(swPin) == LOW) {\n    digitalWrite(ledPin, HIGH);\n  } else {\n    digitalWrite(ledPin, LOW);\n  }\n  delay(10);\n}`,
     components: [
       { type: 'slideswitch', label: 'SW',   pinON1: 'g10', pinCOM: 'g11', pinON2: 'g12' },
-      { type: 'resistor',    label: '10kΩ', pin1: 'a11',   pin2: 'a15' },
       { type: 'resistor',    label: '220Ω', pin1: 'e20',   pin2: 'e24' },
       { type: 'led',         label: 'LED',  pin1: 'a20',   pin2: 'a19' },
     ],

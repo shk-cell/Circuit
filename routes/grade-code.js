@@ -5,7 +5,9 @@ const problems = require('../data/problems-write-code');
 
 require('dotenv').config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// API 키가 없어도 서버는 뜨도록 지연 생성
+let openai = null;
+const getOpenAI = () => (openai ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
 /**
  * [회로 보고 코드 작성] 모드 전용 채점 API
@@ -75,7 +77,7 @@ ${userCode}
   "feedback": "친절한 한국어 피드백 (1~2문장)"
 }`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },

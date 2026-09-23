@@ -66,18 +66,19 @@ void loop() {
   {
     id: 3,
     title: "푸시버튼으로 LED 켜기",
-    description: "푸시버튼(D2)을 누르면 LED(D13)가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.",
+    description: "푸시버튼(D2)을 누르면 LED(D13)가 켜지고 버튼을 누르지 않는다면 LED가 꺼집니다.\n※ 버튼은 아두이노 내부 풀업(INPUT_PULLUP)을 사용합니다: 누르면 LOW, 떼면 HIGH",
     defaultCode: `// [미션 3] 버튼으로 LED 제어 가이드
 // --------------------------------------------------
 // 1. 연결 정보 확인:
 //    - 버튼: 디지털 2번(D2), LED: 디지털 13번(D13)
 // 2. 주요 명령어 예시:
 //    - int val = digitalRead(2); <- 2번 핀의 상태(HIGH/LOW)를 읽어 val에 저장
-//    - if (val == HIGH) { ... } <- 만약 val이 HIGH라면...
+//    - if (val == LOW) { ... } <- 만약 val이 LOW라면(= 버튼을 눌렀다면)...
+// 3. INPUT_PULLUP: 버튼을 누르면 LOW, 떼면 HIGH가 읽힙니다.
 // --------------------------------------------------
 
 void setup() {
-  pinMode(2, INPUT);   // 버튼은 전기를 읽으므로 INPUT
+  pinMode(2, INPUT_PULLUP); // 버튼 입력 (내부 풀업 저항 사용)
   pinMode(13, OUTPUT); // LED는 전기를 보내므로 OUTPUT
 }
 
@@ -86,7 +87,7 @@ void loop() {
   int btn = digitalRead(2);
 
   // [STEP 2] 조건문을 사용하여 LED를 제어하세요.
-  if (btn == HIGH) {
+  if (btn == LOW) {
     // 버튼을 눌렀을 때: LED 켜기
     digitalWrite(13, HIGH);
   } else {
@@ -94,14 +95,14 @@ void loop() {
     
   }
 }`,
-    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></statement><statement name="LOOP"><block type="controls_if"><mutation else="1"></mutation></block></statement></block></xml>`,
-    modelWires: [['5V', 'Brail+1', '#ff4444'], ['GND0', 'Brail-1', '#222222'], ['g12', 'Brail+12', '#ff4444'], ['i6', 'Brail-6', '#222222'], ['D2', 'i10', '#4488ff'], ['a21', 'D13', '#ff4444'], ['c16', 'Brail-16', '#222222']],
-    components: [{ type: 'button', label: 'BTN', pin1: 'e10', pin2: 'e12', pin3: 'f10', pin4: 'f12' }, { type: 'resistor', label: '10kΩ', pin1: 'h6', pin2: 'h10' }, { type: 'resistor', label: '220Ω', pin1: 'b16', pin2: 'b20' }, { type: 'led', label: 'LED', pin1: 'a21', pin2: 'a20' }],
+    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT_PULLUP</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></statement><statement name="LOOP"><block type="controls_if"><mutation else="1"></mutation></block></statement></block></xml>`,
+    modelWires: [['GND0', 'Brail-1', '#222222'], ['g12', 'Brail-12', '#222222'], ['D2', 'i10', '#4488ff'], ['a21', 'D13', '#ff4444'], ['c16', 'Brail-16', '#222222']],
+    components: [{ type: 'button', label: 'BTN', pin1: 'e10', pin2: 'e12', pin3: 'f10', pin4: 'f12' }, { type: 'resistor', label: '220Ω', pin1: 'b16', pin2: 'b20' }, { type: 'led', label: 'LED', pin1: 'a21', pin2: 'a20' }],
   },
   {
     id: 4,
     title: "푸시 버튼 2개로 LED 2개 켜고 끄기",
-    description: "버튼1(D2)을 누르면 LED1(D12)이 켜지고, 버튼2(D3)를 누르면 LED2(D13)가 켜지도록 작성하세요.",
+    description: "버튼1(D2)을 누르면 LED1(D12)이 켜지고, 버튼2(D3)를 누르면 LED2(D13)가 켜지도록 작성하세요.\n※ 버튼은 아두이노 내부 풀업(INPUT_PULLUP)을 사용합니다: 누르면 LOW, 떼면 HIGH",
     defaultCode: `// [미션 4] 버튼 2개, LED 2개 가이드
 // --------------------------------------------------
 // 1. 연결 정보 확인:
@@ -112,13 +113,13 @@ void loop() {
 
 void setup() {
   // [STEP 1] 2, 3번 입력 / 12, 13번 출력 설정
-  pinMode(2, INPUT); pinMode(3, INPUT);
+  pinMode(2, INPUT_PULLUP); pinMode(3, INPUT_PULLUP); // 내부 풀업
   pinMode(12, OUTPUT); pinMode(13, OUTPUT);
 }
 
 void loop() {
   // [STEP 2] 버튼 1이 눌리면 12번 LED 켜기
-  if (digitalRead(2) == HIGH) {
+  if (digitalRead(2) == LOW) { // 누르면 LOW
     digitalWrite(12, HIGH);
   } else {
     digitalWrite(12, LOW);
@@ -127,9 +128,9 @@ void loop() {
   // [STEP 3] 버튼 2(D3)가 눌리면 13번 LED를 켜는 코드를 아래에 작성하세요.
   
 }`,
-    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT</field><next><block type="arduino_pin_mode"><field name="PIN">3</field><field name="MODE">INPUT</field><next><block type="arduino_pin_mode"><field name="PIN">12</field><field name="MODE">OUTPUT</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></next></block></next></block></statement></block></xml>`,
-    modelWires: [['5V', 'Brail+1', '#ff4444'], ['GND0', 'Brail-1', '#222222'], ['g8', 'Brail+8', '#ff4444'], ['h2', 'Brail-2', '#222222'], ['D2', 'h6', '#4488ff'], ['g15', 'Brail+15', '#ff4444'], ['h9', 'Brail-9', '#222222'], ['D3', 'h13', '#44dd88'], ['D12', 'g22', '#ff8844'], ['h17', 'Brail-17', '#222222'], ['D13', 'g29', '#cc44ff'], ['h24', 'Brail-24', '#222222']],
-    components: [{ type: 'button', label: 'BTN1', pin1: 'e6', pin2: 'e8', pin3: 'f6', pin4: 'f8' }, { type: 'resistor', label: '10kΩ', pin1: 'g2', pin2: 'g6' }, { type: 'button', label: 'BTN2', pin1: 'e13', pin2: 'e15', pin3: 'f13', pin4: 'f15' }, { type: 'resistor', label: '10kΩ', pin1: 'g9', pin2: 'g13' }, { type: 'led', label: 'LED1', pin1: 'f22', pin2: 'f21' }, { type: 'resistor', label: '220Ω', pin1: 'g17', pin2: 'g21' }, { type: 'led', label: 'LED2', pin1: 'f29', pin2: 'f28' }, { type: 'resistor', label: '220Ω', pin1: 'g24', pin2: 'g28' }],
+    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT_PULLUP</field><next><block type="arduino_pin_mode"><field name="PIN">3</field><field name="MODE">INPUT_PULLUP</field><next><block type="arduino_pin_mode"><field name="PIN">12</field><field name="MODE">OUTPUT</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></next></block></next></block></statement></block></xml>`,
+    modelWires: [['GND0', 'Brail-1', '#222222'], ['g8', 'Brail-8', '#222222'], ['D2', 'h6', '#4488ff'], ['g15', 'Brail-15', '#222222'], ['D3', 'h13', '#44dd88'], ['D12', 'g22', '#ff8844'], ['h17', 'Brail-17', '#222222'], ['D13', 'g29', '#cc44ff'], ['h24', 'Brail-24', '#222222']],
+    components: [{ type: 'button', label: 'BTN1', pin1: 'e6', pin2: 'e8', pin3: 'f6', pin4: 'f8' }, { type: 'button', label: 'BTN2', pin1: 'e13', pin2: 'e15', pin3: 'f13', pin4: 'f15' }, { type: 'led', label: 'LED1', pin1: 'f22', pin2: 'f21' }, { type: 'resistor', label: '220Ω', pin1: 'g17', pin2: 'g21' }, { type: 'led', label: 'LED2', pin1: 'f29', pin2: 'f28' }, { type: 'resistor', label: '220Ω', pin1: 'g24', pin2: 'g28' }],
   },
   {
     id: 5,
@@ -175,7 +176,7 @@ void loop() {
   {
     id: 6,
     title: "버튼 2개로 서보모터 방향 제어",
-    description: "버튼1(D2)을 누르면 서보모터 -10도, 버튼2(D3)를 누르면 +10도 회전 시키세요.",
+    description: "버튼1(D2)을 누르면 서보모터 -10도, 버튼2(D3)를 누르면 +10도 회전 시키세요.\n※ 버튼은 아두이노 내부 풀업(INPUT_PULLUP)을 사용합니다: 누르면 LOW, 떼면 HIGH",
     defaultCode: `// [미션 6] 서보모터 버튼 제어 가이드
 // --------------------------------------------------
 // 1. 연결 정보 확인:
@@ -190,13 +191,13 @@ int angle = 90; // 초기 각도
 
 void setup() {
   myservo.attach(9);
-  pinMode(2, INPUT); 
-  pinMode(3, INPUT);
+  pinMode(2, INPUT_PULLUP); // 내부 풀업
+  pinMode(3, INPUT_PULLUP);
 }
 
 void loop() {
   // [STEP 1] 버튼 1(D2)이 눌리면 각도를 10도 뺍니다.
-  if (digitalRead(2) == HIGH) {
+  if (digitalRead(2) == LOW) { // 누르면 LOW
     angle = angle - 10;
   }
   
@@ -210,9 +211,9 @@ void loop() {
   myservo.write(angle);
   delay(100); // 버튼 입력 속도 조절
 }`,
-    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT</field><next><block type="arduino_pin_mode"><field name="PIN">3</field><field name="MODE">INPUT</field></block></next></block></statement></block></xml>`,
-    modelWires: [['5V', 'Brail+1', '#ff4444'],['GND2', 'Brail-1', '#222222'],['g2', 'Brail+2', '#ff4444'],['g3', 'Brail-3', '#222222'],['D9', 'g4', '#ffcc00'],['g15', 'Brail+15', '#ff4444'],['h9', 'Brail-9', '#222222'],['D2', 'h13', '#4488ff'],['g23', 'Brail+23', '#ff4444'],['h17', 'Brail-17', '#222222'],['D3', 'h21', '#44dd88']],
-    components: [{ type: 'servo', label: 'Servo', pinVCC: 'f2', pinGND: 'f3', pinSIG: 'f4' }, { type: 'button', label: 'BTN1', pin1: 'e13', pin2: 'e15', pin3: 'f13', pin4: 'f15' }, { type: 'resistor', label: '10kΩ', pin1: 'g9', pin2: 'g13' }, { type: 'button', label: 'BTN2', pin1: 'e21', pin2: 'e23', pin3: 'f21', pin4: 'f23' }, { type: 'resistor', label: '10kΩ', pin1: 'g17', pin2: 'g21' }],
+    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT_PULLUP</field><next><block type="arduino_pin_mode"><field name="PIN">3</field><field name="MODE">INPUT_PULLUP</field></block></next></block></statement></block></xml>`,
+    modelWires: [['5V', 'Brail+1', '#ff4444'],['GND2', 'Brail-1', '#222222'],['g2', 'Brail+2', '#ff4444'],['g3', 'Brail-3', '#222222'],['D9', 'g4', '#ffcc00'],['g15', 'Brail-15', '#222222'],['D2', 'h13', '#4488ff'],['g23', 'Brail-23', '#222222'],['D3', 'h21', '#44dd88']],
+    components: [{ type: 'servo', label: 'Servo', pinVCC: 'f2', pinGND: 'f3', pinSIG: 'f4' }, { type: 'button', label: 'BTN1', pin1: 'e13', pin2: 'e15', pin3: 'f13', pin4: 'f15' }, { type: 'button', label: 'BTN2', pin1: 'e21', pin2: 'e23', pin3: 'f21', pin4: 'f23' }],
   },
   {
     id: 7,
@@ -251,7 +252,7 @@ void loop() {
   {
     id: 8,
     title: "슬라이드 스위치로 LED 켜고 끄기",
-    description: "스위치(D2)의 위치에 따라 LED(D13)가 켜지고 꺼지는 프로그램을 작성하세요.",
+    description: "스위치(D2)의 위치에 따라 LED(D13)가 켜지고 꺼지는 프로그램을 작성하세요.\n※ 스위치는 아두이노 내부 풀업(INPUT_PULLUP)을 사용합니다: GND 쪽으로 밀면 LOW, 반대쪽으로 밀면 HIGH",
     defaultCode: `// [미션 8] 슬라이드 스위치 가이드
 // --------------------------------------------------
 // 1. 힌트: 스위치는 버튼과 원리가 같습니다. 
@@ -259,7 +260,7 @@ void loop() {
 // --------------------------------------------------
 
 void setup() {
-  pinMode(2, INPUT);   // 스위치 핀
+  pinMode(2, INPUT_PULLUP); // 스위치 핀 (내부 풀업: GND 쪽이면 LOW)
   pinMode(13, OUTPUT); // LED 핀
 }
 
@@ -271,9 +272,9 @@ void loop() {
   // 여기에 digitalWrite 명령어를 작성하세요.
   
 }`,
-    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></statement></block></xml>`,
-    modelWires: [['5V', 'Brail+1', '#ff4444'], ['GND0', 'Brail-1', '#222222'],['g8', 'Brail+8', '#ff4444'], ['h2', 'Brail-2', '#222222'], ['D2', 'g7', '#4488ff'],['D13', 'e24', '#ff8844'], ['a19', 'Brail-19', '#222222']],
-    components: [{ type: 'slideswitch', label: 'SW', pinCOM: 'f7', pinON1: 'f6', pinON2: 'f8' }, { type: 'resistor', label: '10kΩ', pin1: 'g2', pin2: 'g6' }, { type: 'resistor', label: '220Ω', pin1: 'e20', pin2: 'e24' }, { type: 'led', label: 'LED', pin1: 'a20', pin2: 'a19' }],
+    defaultBlocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="arduino_functions" x="40" y="20"><statement name="SETUP"><block type="arduino_pin_mode"><field name="PIN">2</field><field name="MODE">INPUT_PULLUP</field><next><block type="arduino_pin_mode"><field name="PIN">13</field><field name="MODE">OUTPUT</field></block></next></block></statement></block></xml>`,
+    modelWires: [['GND0', 'Brail-1', '#222222'], ['g6', 'Brail-6', '#222222'], ['D2', 'g7', '#4488ff'],['D13', 'e24', '#ff8844'], ['a19', 'Brail-19', '#222222']],
+    components: [{ type: 'slideswitch', label: 'SW', pinCOM: 'f7', pinON1: 'f6', pinON2: 'f8' }, { type: 'resistor', label: '220Ω', pin1: 'e20', pin2: 'e24' }, { type: 'led', label: 'LED', pin1: 'a20', pin2: 'a19' }],
   },
   {
     id: 9,
